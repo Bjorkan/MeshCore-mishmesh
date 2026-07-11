@@ -1,0 +1,19 @@
+{
+  "status.no_data": "No data",
+  "status.uptime": "Uptime: %uh %02um",
+  "status.battery": "Battery: %u.%02uV",
+  "status.air_tx_rx": "Air TX %s RX %s",
+  "status.rssi_snr": "RSSI %d  SNR %.1f dB",
+  "status.noise": "Noise %d dBm",
+  "status.queue": "Queue: %u",
+  "status.sent": "Sent %u f%u d%u",
+  "status.received": "Recv %u f%u d%u",
+  "status.duplicates": "Dups f%u d%u",
+  "status.receive_errors": "RxErr: %u",
+  "status.debug": "Debug: %u",
+  "status.clock_unset": "Clock: --",
+  "status.clock": "Clock: %02u:%02u",
+  "status.refresh": "Refresh",
+  "status.loading": "Loading...",
+  "status.no_response": "No response"
+}

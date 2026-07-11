@@ -1,0 +1,19 @@
+{
+  "status.no_data": "Ingen data",
+  "status.uptime": "Drifttid: %uh %02um",
+  "status.battery": "Batteri: %u.%02uV",
+  "status.air_tx_rx": "Sändtid TX %s RX %s",
+  "status.rssi_snr": "RSSI %d  SNR %.1f dB",
+  "status.noise": "Brus %d dBm",
+  "status.queue": "Kö: %u",
+  "status.sent": "Skickat %u f%u d%u",
+  "status.received": "Mottaget %u f%u d%u",
+  "status.duplicates": "Dubbletter f%u d%u",
+  "status.receive_errors": "Mottagningsfel: %u",
+  "status.debug": "Felsökning: %u",
+  "status.clock_unset": "Klocka: --",
+  "status.clock": "Klocka: %02u:%02u",
+  "status.refresh": "Uppdatera",
+  "status.loading": "Laddar...",
+  "status.no_response": "Inget svar"
+}

@@ -3,11 +3,21 @@
 #include <mishmesh/applets/AppletChrome.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/StatusLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
 #include <string.h>
 
 namespace mishmesh {
+
+static const char* trStatus(StatusTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedStatusLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedStatusLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 // Compact airtime: "12s" / "5m" / "1h2m" from seconds (RepeaterStats airtime is secs).
 static void fmtDurS(char* o, int n, uint32_t s) {
@@ -17,25 +27,25 @@ static void fmtDurS(char* o, int n, uint32_t s) {
 }
 
 int formatRepeaterStatus(const RepeaterStatusView& s, uint32_t loginClockEpoch,
-                         char out[][STATUS_LINE_LEN], int maxLines) {
+                          char out[][STATUS_LINE_LEN], int maxLines) {
   int n = 0;
   char a[12], b[12];
 #define RS_EMIT(...) do { if (n < maxLines) snprintf(out[n++], STATUS_LINE_LEN, __VA_ARGS__); } while (0)
-  if (!s.valid) { RS_EMIT("No data"); return n; }
-  RS_EMIT("Uptime: %uh %02um", (unsigned)(s.upTimeSecs / 3600u), (unsigned)((s.upTimeSecs / 60u) % 60u));
-  RS_EMIT("Battery: %u.%02uV", (unsigned)(s.battMilliVolts / 1000u), (unsigned)((s.battMilliVolts % 1000u) / 10u));
+  if (!s.valid) { RS_EMIT(trStatus(StatusTextId::StatusNoData)); return n; }
+  RS_EMIT(trStatus(StatusTextId::StatusUptime), (unsigned)(s.upTimeSecs / 3600u), (unsigned)((s.upTimeSecs / 60u) % 60u));
+  RS_EMIT(trStatus(StatusTextId::StatusBattery), (unsigned)(s.battMilliVolts / 1000u), (unsigned)((s.battMilliVolts % 1000u) / 10u));
   fmtDurS(a, sizeof(a), s.airTxSecs); fmtDurS(b, sizeof(b), s.airRxSecs);
-  RS_EMIT("Air TX %s RX %s", a, b);
-  RS_EMIT("RSSI %d  SNR %.1f dB", (int)s.lastRssi, (double)s.lastSnrX4 / 4.0);
-  RS_EMIT("Noise %d dBm", (int)s.noiseFloor);
-  RS_EMIT("Queue: %u", (unsigned)s.txQueueLen);
-  RS_EMIT("Sent %u f%u d%u", (unsigned)s.packetsSent, (unsigned)s.sentFlood, (unsigned)s.sentDirect);
-  RS_EMIT("Recv %u f%u d%u", (unsigned)s.packetsRecv, (unsigned)s.recvFlood, (unsigned)s.recvDirect);
-  RS_EMIT("Dups f%u d%u", (unsigned)s.floodDups, (unsigned)s.directDups);
-  RS_EMIT("RxErr: %u", (unsigned)s.recvErrors);
-  RS_EMIT("Debug: %u", (unsigned)s.errEvents);
-  if (loginClockEpoch == 0) RS_EMIT("Clock: --");
-  else RS_EMIT("Clock: %02u:%02u", (unsigned)((loginClockEpoch / 3600u) % 24u),
+  RS_EMIT(trStatus(StatusTextId::StatusAirTxRx), a, b);
+  RS_EMIT(trStatus(StatusTextId::StatusRssiSnr), (int)s.lastRssi, (double)s.lastSnrX4 / 4.0);
+  RS_EMIT(trStatus(StatusTextId::StatusNoise), (int)s.noiseFloor);
+  RS_EMIT(trStatus(StatusTextId::StatusQueue), (unsigned)s.txQueueLen);
+  RS_EMIT(trStatus(StatusTextId::StatusSent), (unsigned)s.packetsSent, (unsigned)s.sentFlood, (unsigned)s.sentDirect);
+  RS_EMIT(trStatus(StatusTextId::StatusReceived), (unsigned)s.packetsRecv, (unsigned)s.recvFlood, (unsigned)s.recvDirect);
+  RS_EMIT(trStatus(StatusTextId::StatusDuplicates), (unsigned)s.floodDups, (unsigned)s.directDups);
+  RS_EMIT(trStatus(StatusTextId::StatusReceiveErrors), (unsigned)s.recvErrors);
+  RS_EMIT(trStatus(StatusTextId::StatusDebug), (unsigned)s.errEvents);
+  if (loginClockEpoch == 0) RS_EMIT(trStatus(StatusTextId::StatusClockUnset));
+  else RS_EMIT(trStatus(StatusTextId::StatusClock), (unsigned)((loginClockEpoch / 3600u) % 24u),
                (unsigned)((loginClockEpoch / 60u) % 60u));
 #undef RS_EMIT
   return n;
@@ -51,7 +61,7 @@ void StatusApplet::onStart(AppletContext& ctx) {
   _host = ctx.host;
   _svc = ctx.contacts;
   _req.timeoutMs = 20000;   // LoRa round-trip; stays under the 30s auto-off
-  _refresh.set("Refresh", (uint16_t)Icon::Reload);
+  _refresh.set(trStatus(StatusTextId::StatusRefresh), (uint16_t)Icon::Reload);
   _view.setHeader(&_refresh, 12);
   fetch();
 }
@@ -62,14 +72,14 @@ void StatusApplet::onShow(AppletContext& ctx) {
   _host = ctx.host;
   _svc = ctx.contacts;
   _req.timeoutMs = 20000;
-  _refresh.set("Refresh", (uint16_t)Icon::Reload);
+  _refresh.set(trStatus(StatusTextId::StatusRefresh), (uint16_t)Icon::Reload);
   _view.setHeader(&_refresh, 12);
   if (!_autoFetchDone) { _autoFetchDone = true; fetch(); }
 }
 
 void StatusApplet::fetch() {
   _view.clear();
-  _view.addLine("Loading...");
+  _view.addLine(trStatus(StatusTextId::StatusLoading));
   _pending = false;
   if (_svc) {
     _statusStart = _svc->statusSeq();
@@ -104,7 +114,7 @@ int StatusApplet::renderBody(Canvas& c, int x, int y, int w, int h) {
     } else if (st == PendingRequest::State::TimedOut) {
       _pending = false;
       _view.clear();
-      _view.addLine("No response");
+      _view.addLine(trStatus(StatusTextId::StatusNoResponse));
     }
   }
 
