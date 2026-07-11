@@ -27,3 +27,57 @@ battery_percent = "Battery percent"
 screen_sleep = "Screen sleep"
 left_shortcut = "Left shortcut"
 right_shortcut = "Right shortcut"
+
+[contacts.tabs]
+favorites = "Favorites"
+contacts = "Contacts"
+repeaters = "Repeaters"
+rooms = "Rooms"
+sensors = "Sensors"
+discover = "Discover"
+settings = "Settings"
+
+[contacts.empty]
+contacts = "No contacts"
+repeaters = "No repeaters"
+rooms = "No rooms"
+sensors = "No sensors"
+favourites = "No favourites"
+new_devices = "No new devices"
+
+[contacts.settings]
+auto_add_all = "Auto-add all"
+auto_add_users = "Auto-add Users"
+auto_add_repeaters = "Auto-add Repeaters"
+auto_add_rooms = "Auto-add Rooms"
+auto_add_sensors = "Auto-add Sensors"
+overwrite_oldest = "Overwrite oldest"
+notify_full = "Notify when full"
+max_hops = "Max hops"
+remove_non_users = "Remove non-users"
+remove_non_favourites = "Remove non-favourites"
+remove_all = "Remove all contacts"
+no_limit = "No limit"
+direct = "Direct"
+one_hop = "1 hop"
+hops = "%d hops"
+removed = "Removed %d"
+confirm_non_users = "Remove non-user contacts?"
+confirm_all = "Remove ALL contacts?"
+confirm_non_favourites = "Remove all non-favourites?"
+
+[contacts.type]
+user = "User"
+repeater = "Repeater"
+room = "Room"
+sensor = "Sensor"
+contact = "Contact"
+
+[contacts.permissions]
+allow_telemetry = "Allow telemetry"
+include_location = "Include location"
+include_sensors = "Include sensors"
+
+[contacts.full]
+title = "Contacts full"
+dismiss = "Press any key to dismiss"

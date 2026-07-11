@@ -27,3 +27,57 @@ battery_percent = "Batteriprocent"
 screen_sleep = "Skärmsläckning"
 left_shortcut = "Vänster genväg"
 right_shortcut = "Höger genväg"
+
+[contacts.tabs]
+favorites = "Favoriter"
+contacts = "Kontakter"
+repeaters = "Repeatrar"
+rooms = "Rum"
+sensors = "Sensorer"
+discover = "Upptäck"
+settings = "Inställningar"
+
+[contacts.empty]
+contacts = "Inga kontakter"
+repeaters = "Inga repeatrar"
+rooms = "Inga rum"
+sensors = "Inga sensorer"
+favourites = "Inga favoriter"
+new_devices = "Inga nya enheter"
+
+[contacts.settings]
+auto_add_all = "Auto-lägg till alla"
+auto_add_users = "Auto-lägg till användare"
+auto_add_repeaters = "Auto-lägg till repeatrar"
+auto_add_rooms = "Auto-lägg till rum"
+auto_add_sensors = "Auto-lägg till sensorer"
+overwrite_oldest = "Skriv över äldsta"
+notify_full = "Meddela när full"
+max_hops = "Max hopp"
+remove_non_users = "Ta bort icke-användare"
+remove_non_favourites = "Ta bort icke-favoriter"
+remove_all = "Ta bort alla kontakter"
+no_limit = "Ingen gräns"
+direct = "Direkt"
+one_hop = "1 hopp"
+hops = "%d hopp"
+removed = "Tog bort %d"
+confirm_non_users = "Ta bort icke-användare?"
+confirm_all = "Ta bort ALLA kontakter?"
+confirm_non_favourites = "Ta bort alla icke-favoriter?"
+
+[contacts.type]
+user = "Användare"
+repeater = "Repeater"
+room = "Rum"
+sensor = "Sensor"
+contact = "Kontakt"
+
+[contacts.permissions]
+allow_telemetry = "Tillåt telemetri"
+include_location = "Inkludera position"
+include_sensors = "Inkludera sensorer"
+
+[contacts.full]
+title = "Kontaktlista full"
+dismiss = "Tryck för att stänga"
