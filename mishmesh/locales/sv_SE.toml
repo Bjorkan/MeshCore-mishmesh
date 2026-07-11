@@ -1,0 +1,23 @@
+[meta]
+name = "Swedish"
+native_name = "Svenska"
+
+[app]
+settings = "Inställningar"
+
+[settings]
+home = "Hem"
+contacts = "Kontakter"
+messages = "Meddelanden"
+advert = "Annonsering"
+radio = "Radio"
+time_date = "Tid och datum"
+language = "Språk"
+system_info = "Systeminfo"
+reset_onboarding = "Återställ introduktion"
+
+[home]
+battery_percent = "Batteriprocent"
+screen_sleep = "Skärmsläckning"
+left_shortcut = "Vänster genväg"
+right_shortcut = "Höger genväg"

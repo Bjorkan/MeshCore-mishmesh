@@ -1,0 +1,23 @@
+[meta]
+name = "English"
+native_name = "English"
+
+[app]
+settings = "Settings"
+
+[settings]
+home = "Home"
+contacts = "Contacts"
+messages = "Messages"
+advert = "Advert"
+radio = "Radio"
+time_date = "Time & date"
+language = "Language"
+system_info = "System Info"
+reset_onboarding = "Reset onboarding"
+
+[home]
+battery_percent = "Battery percent"
+screen_sleep = "Screen sleep"
+left_shortcut = "Left shortcut"
+right_shortcut = "Right shortcut"
