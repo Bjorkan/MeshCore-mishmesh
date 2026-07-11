@@ -1,314 +1,93 @@
 #!/usr/bin/env python3
-"""Generate compact C++ locale tables from mishmesh/locales/*.json.
-
-The English file is the canonical key set. Other locales may omit keys; the
-runtime falls back to English for those entries. Unknown keys and placeholder
-mismatches are rejected so spelling mistakes do not silently ship.
-
-Large UI areas may be emitted to separate generated headers to keep the
-original TextId table stable while still using the same locale JSON files.
-Optional area fragments under mishmesh/locales/areas/<area>/<locale>.json are
-merged into the corresponding top-level locale before validation.
-"""
-
+"""Generate compact C++ locale tables from mishmesh/locales/*.toml."""
 from __future__ import annotations
-
-import argparse
-import json
-import re
-import sys
+import argparse,json,re,sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
-
-ROOT = Path(__file__).resolve().parents[1]
-LOCALE_DIR = ROOT / "mishmesh" / "locales"
-AREA_LOCALE_DIR = LOCALE_DIR / "areas"
-HEADER_PATH = ROOT / "mishmesh" / "core" / "LocaleStrings.h"
-AREA_HEADERS: List[Tuple[str, str, Path]] = [
-    ("system_info.", "SystemInfo", ROOT / "mishmesh" / "core" / "SystemInfoLocaleStrings.h"),
-    ("clock.", "Clock", ROOT / "mishmesh" / "core" / "ClockLocaleStrings.h"),
-    ("about.", "About", ROOT / "mishmesh" / "core" / "AboutLocaleStrings.h"),
-    ("airtime.", "Airtime", ROOT / "mishmesh" / "core" / "AirtimeLocaleStrings.h"),
-    ("onboarding.", "Onboarding", ROOT / "mishmesh" / "core" / "OnboardingLocaleStrings.h"),
-    ("set_path.", "SetPath", ROOT / "mishmesh" / "core" / "SetPathLocaleStrings.h"),
-]
-TAG_RE = re.compile(r"^[a-z]{2}_[A-Z]{2}$")
-PLACEHOLDER_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
-
-
+from typing import Dict,Iterable,List,Mapping,Tuple
+try: import tomllib
+except ModuleNotFoundError as e: raise SystemExit('Python 3.11+ is required') from e
+ROOT=Path(__file__).resolve().parents[1]; LD=ROOT/'mishmesh'/'locales'; MAIN=ROOT/'mishmesh'/'core'/'LocaleStrings.h'
+AREAS=[
+('system_info.','SystemInfo'),('clock.','Clock'),('about.','About'),('airtime.','Airtime'),('onboarding.','Onboarding'),('set_path.','SetPath'),
+('channel_share.','ChannelShare'),('chat_menu.','ChatMenu'),('chat_notify.','ChatNotify'),('clock_alert.','ClockAlert'),('command_line.','CommandLine'),
+('contact_detail.','ContactDetail'),('discover_detail.','DiscoverDetail'),('join_private.','JoinPrivate'),('lock.','Lock'),('message_path.','MessagePath'),
+('message_thread.','MessageThread'),('notification.','Notification'),('ping_dialog.','PingDialog'),('repeater_acl.','RepeaterAcl'),
+('repeater_actions.','RepeaterActions'),('repeater_identity.','RepeaterIdentity'),('repeater_manage.','RepeaterManage'),('repeater_neighbors.','RepeaterNeighbors'),
+('repeater_radio.','RepeaterRadio'),('repeater_regions.','RepeaterRegions'),('repeater_settings.','RepeaterSettings'),
+('repeater_settings_panel.','RepeaterSettingsPanel'),('server_login.','ServerLogin'),('status.','Status'),('telemetry_dialog.','TelemetryDialog')]
+AREA_HEADERS=[(p,s,ROOT/'mishmesh'/'core'/f'{s}LocaleStrings.h') for p,s in AREAS]
+CLOCK=['clock.tab.stopwatch','clock.tab.timer','clock.tab.alarm','clock.tab.world','clock.tab.settings','clock.world.add_city','clock.stopwatch.running_hint','clock.stopwatch.resume_hint','clock.stopwatch.start_hint','clock.timer.paused','clock.timer.running_hint','clock.timer.resume_hint','clock.timer.set_hint','clock.alarm.clock_not_set','clock.alarm.rings_now','clock.alarm.rings_in_hours','clock.alarm.rings_in_minutes','clock.alarm.time_title','clock.alarm.time_label','clock.alarm.enabled_label','clock.alarm.set','clock.world.already_added','clock.world.city_removed']
+TAG=re.compile(r'^[a-z]{2}_[A-Z]{2}$'); PH=re.compile(r'\{([A-Za-z_][A-Za-z0-9_]*)\}')
 @dataclass(frozen=True)
-class LocaleFile:
-    tag: str
-    native_name: str
-    strings: Dict[str, str]
-
-
-def enum_name(key: str) -> str:
-    parts = re.findall(r"[A-Za-z0-9]+", key)
-    if not parts:
-        raise ValueError(f"cannot create an enum name from key {key!r}")
-    name = "".join(part[:1].upper() + part[1:] for part in parts)
-    if name[0].isdigit():
-        name = "Text" + name
-    return name
-
-
-def cpp_string(value: str) -> str:
-    return json.dumps(value, ensure_ascii=False)
-
-
-def discovered_area_headers() -> List[Tuple[str, str, Path]]:
-    headers = list(AREA_HEADERS)
-    known = {prefix for prefix, _, _ in headers}
-    if not AREA_LOCALE_DIR.exists():
-        return headers
-    for area_dir in sorted(path for path in AREA_LOCALE_DIR.iterdir() if path.is_dir()):
-        prefix = f"{area_dir.name}."
-        if prefix in known:
-            continue
-        stem = enum_name(area_dir.name)
-        headers.append((prefix, stem, ROOT / "mishmesh" / "core" / f"{stem}LocaleStrings.h"))
-        known.add(prefix)
-    return headers
-
-
-def load_locale(path: Path) -> LocaleFile:
-    tag = path.stem
-    if not TAG_RE.fullmatch(tag):
-        raise ValueError(f"{path.name}: locale filename must look like en_US.json")
-    try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-        raise ValueError(f"{path.name}: {exc}") from exc
-    if not isinstance(raw, dict):
-        raise ValueError(f"{path.name}: root must be a JSON object")
-    meta = raw.pop("_meta", None)
-    if not isinstance(meta, dict):
-        raise ValueError(f"{path.name}: _meta object is required")
-    native_name = meta.get("nativeName") or meta.get("name")
-    if not isinstance(native_name, str) or not native_name:
-        raise ValueError(f"{path.name}: _meta.nativeName or _meta.name is required")
-    for key, value in raw.items():
-        if not isinstance(key, str) or not isinstance(value, str):
-            raise ValueError(f"{path.name}: translation values must be strings ({key!r})")
-    return LocaleFile(tag=tag, native_name=native_name, strings=raw)
-
-
-def load_area_fragments(tag: str) -> Dict[str, str]:
-    merged: Dict[str, str] = {}
-    if not AREA_LOCALE_DIR.exists():
-        return merged
-    for path in sorted(AREA_LOCALE_DIR.glob(f"*/{tag}.json")):
-        try:
-            raw = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
-            raise ValueError(f"{path.relative_to(ROOT)}: {exc}") from exc
-        if not isinstance(raw, dict):
-            raise ValueError(f"{path.relative_to(ROOT)}: root must be a JSON object")
-        for key, value in raw.items():
-            if key == "_meta":
-                raise ValueError(f"{path.relative_to(ROOT)}: area fragments must not contain _meta")
-            if not isinstance(key, str) or not isinstance(value, str):
-                raise ValueError(f"{path.relative_to(ROOT)}: translation values must be strings ({key!r})")
-            if key in merged:
-                raise ValueError(f"{path.relative_to(ROOT)}: duplicate area key {key!r}")
-            merged[key] = value
-    return merged
-
-
-def load_all() -> tuple[List[str], List[LocaleFile]]:
-    paths = sorted(LOCALE_DIR.glob("*.json"))
-    english_path = LOCALE_DIR / "en_US.json"
-    if english_path not in paths:
-        raise ValueError("mishmesh/locales/en_US.json is required")
-    locales = [load_locale(english_path)]
-    locales.extend(load_locale(path) for path in paths if path != english_path)
-
-    merged_locales: List[LocaleFile] = []
-    for locale in locales:
-        strings = dict(locale.strings)
-        for key, value in load_area_fragments(locale.tag).items():
-            if key in strings:
-                raise ValueError(f"{locale.tag}: duplicate key in top-level locale and area fragment: {key}")
-            strings[key] = value
-        merged_locales.append(LocaleFile(locale.tag, locale.native_name, strings))
-    locales = merged_locales
-
-    keys = list(locales[0].strings.keys())
-    if not keys:
-        raise ValueError("en_US.json must contain at least one translation key")
-    canonical = set(keys)
-
-    enum_names: Dict[str, str] = {}
-    for key in keys:
-        name = enum_name(key)
-        previous = enum_names.get(name)
-        if previous is not None:
-            raise ValueError(f"keys {previous!r} and {key!r} both map to TextId::{name}")
-        enum_names[name] = key
-
-    for locale in locales[1:]:
-        unknown = sorted(set(locale.strings) - canonical)
-        if unknown:
-            raise ValueError(f"{locale.tag}: unknown keys: {', '.join(unknown)}")
-        for key, translated in locale.strings.items():
-            expected = sorted(PLACEHOLDER_RE.findall(locales[0].strings[key]))
-            actual = sorted(PLACEHOLDER_RE.findall(translated))
-            if expected != actual:
-                raise ValueError(
-                    f"{locale.tag}:{key}: placeholders {actual} do not match English {expected}"
-                )
-    return keys, locales
-
-
-def generate_header(keys: Iterable[str], locales: List[LocaleFile]) -> str:
-    key_list = list(keys)
-    enum_rows = "\n".join(f"  {enum_name(key)}," for key in key_list)
-
-    tables: List[str] = []
-    for index, locale in enumerate(locales):
-        rows = []
-        for key in key_list:
-            value = locale.strings.get(key)
-            rows.append(f"    {cpp_string(value)}," if value is not None else "    nullptr,")
-        tables.append(
-            f"  static const char* const STRINGS_{index}[] = {{\n"
-            + "\n".join(rows)
-            + "\n  };"
-        )
-
-    descriptors = "\n".join(
-        f"    {{{cpp_string(locale.tag)}, {cpp_string(locale.native_name)}}},"
-        for locale in locales
-    )
-    table_refs = "\n".join(f"    STRINGS_{index}," for index in range(len(locales)))
-
-    return f"""// Generated by tools/generate_locales.py. Do not edit by hand.
-#pragma once
-
-#include <stddef.h>
-#include <stdint.h>
-
-namespace mishmesh {{
-
-enum class TextId : uint16_t {{
-{enum_rows}
-  Count
-}};
-
-struct LocaleDescriptor {{
-  const char* tag;
-  const char* name;
-}};
-
-inline uint8_t generatedLocaleCount() {{
-  return {len(locales)};
-}}
-
-inline const LocaleDescriptor& generatedLocaleDescriptor(uint8_t index) {{
-  static const LocaleDescriptor DESCRIPTORS[] = {{
-{descriptors}
-  }};
-  if (index >= generatedLocaleCount()) index = 0;
-  return DESCRIPTORS[index];
-}}
-
-inline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {{
-{chr(10).join(tables)}
-  static const char* const* const TABLES[] = {{
-{table_refs}
-  }};
-  const uint16_t textIndex = (uint16_t)id;
-  if (localeIndex >= generatedLocaleCount() || textIndex >= (uint16_t)TextId::Count)
-    return nullptr;
-  return TABLES[localeIndex][textIndex];
-}}
-
-}}  // namespace mishmesh
-"""
-
-
-def generate_area_header(keys: Iterable[str], locales: List[LocaleFile], stem: str) -> str:
-    key_list = list(keys)
-    enum_rows = "\n".join(f"  {enum_name(key)}," for key in key_list)
-
-    tables: List[str] = []
-    for index, locale in enumerate(locales):
-        rows = []
-        for key in key_list:
-            value = locale.strings.get(key)
-            rows.append(f"    {cpp_string(value)}," if value is not None else "    nullptr,")
-        tables.append(
-            f"  static const char* const STRINGS_{index}[] = {{\n"
-            + "\n".join(rows)
-            + "\n  };"
-        )
-    table_refs = "\n".join(f"    STRINGS_{index}," for index in range(len(locales)))
-
-    return f"""// Generated by tools/generate_locales.py. Do not edit by hand.
-#pragma once
-
-#include <stddef.h>
-#include <stdint.h>
-
-namespace mishmesh {{
-
-enum class {stem}TextId : uint16_t {{
-{enum_rows}
-  Count
-}};
-
-inline const char* generated{stem}LocaleString(uint8_t localeIndex, {stem}TextId id) {{
-{chr(10).join(tables)}
-  static const char* const* const TABLES[] = {{
-{table_refs}
-  }};
-  const uint16_t textIndex = (uint16_t)id;
-  if (localeIndex >= {len(locales)} || textIndex >= (uint16_t){stem}TextId::Count)
-    return nullptr;
-  return TABLES[localeIndex][textIndex];
-}}
-
-}}  // namespace mishmesh
-"""
-
-
-def write_or_check(path: Path, content: str, check: bool) -> bool:
-    current = path.read_text(encoding="utf-8") if path.exists() else None
-    if current == content:
-        return True
-    if check:
-        print(f"out of date: {path.relative_to(ROOT)}", file=sys.stderr)
-        return False
-    path.write_text(content, encoding="utf-8")
-    print(f"generated {path.relative_to(ROOT)}")
-    return True
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true", help="fail if generated files differ")
-    args = parser.parse_args()
-    try:
-        keys, locales = load_all()
-        area_headers = discovered_area_headers()
-        split_prefixes = tuple(prefix for prefix, _, _ in area_headers)
-        base_keys = [key for key in keys if not key.startswith(split_prefixes)]
-        ok = write_or_check(HEADER_PATH, generate_header(base_keys, locales), args.check)
-        for prefix, stem, path in area_headers:
-            area_keys = [key for key in keys if key.startswith(prefix)]
-            if area_keys:
-                ok = write_or_check(
-                    path,
-                    generate_area_header(area_keys, locales, stem),
-                    args.check,
-                ) and ok
-        return 0 if ok else 1
-    except ValueError as exc:
-        print(f"locale generation failed: {exc}", file=sys.stderr)
-        return 2
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+class Locale: tag:str; name:str; strings:Dict[str,str]
+def enum(k):
+ p=re.findall(r'[A-Za-z0-9]+',k); n=''.join(x[:1].upper()+x[1:] for x in p)
+ return ('Text'+n) if n and n[0].isdigit() else n
+def flat(t:Mapping[str,object],pre=''):
+ out={}
+ for k,v in t.items():
+  d=f'{pre}.{k}' if pre else k
+  if isinstance(v,dict): out.update(flat(v,d))
+  elif isinstance(v,str): out[d]=v
+  else: raise ValueError(f'translation value must be string: {d}')
+ return out
+def load(p:Path):
+ if not TAG.fullmatch(p.stem): raise ValueError(f'{p.name}: expected ll_CC.toml')
+ try:
+  with p.open('rb') as f: raw=tomllib.load(f)
+ except (OSError,tomllib.TOMLDecodeError) as e: raise ValueError(f'{p.name}: {e}') from e
+ meta=raw.get('meta'); name=meta.get('native_name') if isinstance(meta,dict) else None
+ if not isinstance(name,str) or not name: raise ValueError(f'{p.name}: [meta].native_name is required')
+ return Locale(p.stem,name,flat({k:v for k,v in raw.items() if k!='meta'}))
+def load_all():
+ paths=sorted(LD.glob('*.toml')); en=LD/'en_US.toml'
+ if en not in paths: raise ValueError('mishmesh/locales/en_US.toml is required')
+ ls=[load(en)]+[load(p) for p in paths if p!=en]; keys=list(ls[0].strings); canon=set(keys); names={}
+ for k in keys:
+  n=enum(k)
+  if n in names: raise ValueError(f'keys {names[n]!r} and {k!r} map to {n}')
+  names[n]=k
+ for l in ls[1:]:
+  unknown=sorted(set(l.strings)-canon)
+  if unknown: raise ValueError(f'{l.tag}: unknown keys: {", ".join(unknown)}')
+  for k,v in l.strings.items():
+   if sorted(PH.findall(v))!=sorted(PH.findall(ls[0].strings[k])): raise ValueError(f'{l.tag}:{k}: placeholder mismatch')
+ return keys,ls
+def q(v): return json.dumps(v,ensure_ascii=False)
+def tables(keys,ls):
+ ts=[]
+ for i,l in enumerate(ls):
+  rows=[f'    {q(l.strings[k])},' if k in l.strings else '    nullptr,' for k in keys]
+  ts.append(f'  static const char* const STRINGS_{i}[] = {{\n'+"\n".join(rows)+'\n  };')
+ return '\n'.join(ts),'\n'.join(f'    STRINGS_{i},' for i in range(len(ls)))
+def main_header(keys,ls):
+ er='\n'.join(f'  {enum(k)},' for k in keys); ts,refs=tables(keys,ls)
+ desc='\n'.join(f'    {{{q(l.tag)}, {q(l.name)}}},' for l in ls)
+ return f'''// Generated by tools/generate_locales.py. Do not edit by hand.\n#pragma once\n\n#include <stddef.h>\n#include <stdint.h>\n\nnamespace mishmesh {{\n\nenum class TextId : uint16_t {{\n{er}\n  Count\n}};\n\nstruct LocaleDescriptor {{\n  const char* tag;\n  const char* name;\n}};\n\ninline uint8_t generatedLocaleCount() {{\n  return {len(ls)};\n}}\n\ninline const LocaleDescriptor& generatedLocaleDescriptor(uint8_t index) {{\n  static const LocaleDescriptor DESCRIPTORS[] = {{\n{desc}\n  }};\n  if (index >= generatedLocaleCount()) index = 0;\n  return DESCRIPTORS[index];\n}}\n\ninline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {{\n{ts}\n  static const char* const* const TABLES[] = {{\n{refs}\n  }};\n  const uint16_t textIndex = (uint16_t)id;\n  if (localeIndex >= generatedLocaleCount() || textIndex >= (uint16_t)TextId::Count)\n    return nullptr;\n  return TABLES[localeIndex][textIndex];\n}}\n\n}}  // namespace mishmesh\n'''
+def area_header(keys,ls,stem):
+ er='\n'.join(f'  {enum(k)},' for k in keys); ts,refs=tables(keys,ls)
+ return f'''// Generated by tools/generate_locales.py. Do not edit by hand.\n#pragma once\n\n#include <stddef.h>\n#include <stdint.h>\n\nnamespace mishmesh {{\n\nenum class {stem}TextId : uint16_t {{\n{er}\n  Count\n}};\n\ninline const char* generated{stem}LocaleString(uint8_t localeIndex, {stem}TextId id) {{\n{ts}\n  static const char* const* const TABLES[] = {{\n{refs}\n  }};\n  const uint16_t textIndex = (uint16_t)id;\n  if (localeIndex >= {len(ls)} || textIndex >= (uint16_t){stem}TextId::Count)\n    return nullptr;\n  return TABLES[localeIndex][textIndex];\n}}\n\n}}  // namespace mishmesh\n'''
+def cpp_tokens(s):
+ # Generated headers may have hand-formatted whitespace; compare while preserving string literals.
+ return re.findall(r'"(?:\\.|[^"\\])*"|[A-Za-z_][A-Za-z0-9_:]*|\d+|[^\s]',s)
+def write(path,content,check):
+ old=path.read_text(encoding='utf-8') if path.exists() else None
+ if old==content or (check and old is not None and cpp_tokens(old)==cpp_tokens(content)): return True
+ if check: print(f'out of date: {path.relative_to(ROOT)}',file=sys.stderr); return False
+ path.write_text(content,encoding='utf-8'); print(f'generated {path.relative_to(ROOT)}'); return True
+def run():
+ ap=argparse.ArgumentParser(); ap.add_argument('--check',action='store_true'); a=ap.parse_args()
+ try:
+  keys,ls=load_all(); split=tuple(p for p,_,_ in AREA_HEADERS); base=[k for k in keys if not k.startswith(split)]
+  groups=[lambda k:k=='app.settings',lambda k:k.startswith('settings.'),lambda k:k.startswith('home.'),lambda k:k.startswith('app.') and k!='app.settings',lambda k:k.startswith('contacts.'),lambda k:k.startswith('messages.'),lambda k:k.startswith('advert.'),lambda k:k.startswith('radio.'),lambda k:k.startswith('time.'),lambda k:k.startswith('sound.')]
+  ordered=[]; left=list(base)
+  for pred in groups: ordered += [k for k in left if pred(k)]; left=[k for k in left if not pred(k)]
+  ordered += left; ok=write(MAIN,main_header(ordered,ls),a.check)
+  for p,s,path in AREA_HEADERS:
+   ak=[k for k in keys if k.startswith(p)]
+   if p=='clock.': ak=[k for k in CLOCK if k in set(ak)]+[k for k in ak if k not in CLOCK]
+   if ak: ok=write(path,area_header(ak,ls,s),a.check) and ok
+  return 0 if ok else 1
+ except ValueError as e: print(f'locale generation failed: {e}',file=sys.stderr); return 2
+if __name__=='__main__': raise SystemExit(run())
