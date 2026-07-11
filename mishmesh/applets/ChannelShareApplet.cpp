@@ -3,10 +3,20 @@
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/StrUtil.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/ChannelShareLocaleStrings.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 
 namespace mishmesh {
+
+static const char* trChannelShare(ChannelShareTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedChannelShareLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedChannelShareLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 void ChannelShareApplet::setTarget(const ConvoKey& key, const char* name) {
   _key = key;
@@ -60,14 +70,16 @@ int ChannelShareApplet::onRender(Canvas& c) {
   const bool hasRight = rightX < w;
 
   if (!_keyHex[0]) {
-    c.drawText(fontBody(), side / 2, h / 2 - 4, "No key",
+    c.drawText(fontBody(), side / 2, h / 2 - 4,
+               trChannelShare(ChannelShareTextId::ChannelShareNoKey),
                DisplayDriver::LIGHT, TextAlign::Center);
   } else if (_showKey) {
     c.drawTextWrapped(fontBody(), 1, 2, side - 2, _keyHex, DisplayDriver::LIGHT);
   } else if (_qr.valid()) {
     _qr.draw(c, 0, 0, side, side);
   } else {
-    c.drawText(fontBody(), side / 2, h / 2 - 4, "QR too big",
+    c.drawText(fontBody(), side / 2, h / 2 - 4,
+               trChannelShare(ChannelShareTextId::ChannelShareQrTooBig),
                DisplayDriver::LIGHT, TextAlign::Center);
   }
 
@@ -77,7 +89,9 @@ int ChannelShareApplet::onRender(Canvas& c) {
     if (_name[0])
       ry = right.drawTextWrapped(fontBody(), 1, ry, right.width() - 2, _name,
                                  DisplayDriver::LIGHT) + 4;
-    const char* hint = _showKey ? "Center to show QR" : "Center to show key";
+    const char* hint = _showKey
+        ? trChannelShare(ChannelShareTextId::ChannelShareShowQr)
+        : trChannelShare(ChannelShareTextId::ChannelShareShowKey);
     right.drawTextWrapped(fontCaption(), 1, ry, right.width() - 2, hint,
                           DisplayDriver::LIGHT);
   }
