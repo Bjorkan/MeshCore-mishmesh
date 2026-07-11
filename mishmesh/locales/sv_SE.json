@@ -169,5 +169,7 @@
   "clock.alarm.enabled_label": "Aktiverat",
   "clock.alarm.set": "Alarm inställt",
   "clock.world.already_added": "Redan tillagd",
-  "clock.world.city_removed": "Stad borttagen"
+  "clock.world.city_removed": "Stad borttagen",
+  "about.qr_too_big": "QR-koden är för stor",
+  "about.support_development": "Stöd utvecklingen"
 }

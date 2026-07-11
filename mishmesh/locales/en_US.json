@@ -169,5 +169,7 @@
   "clock.alarm.enabled_label": "Enabled",
   "clock.alarm.set": "Alarm set",
   "clock.world.already_added": "Already added",
-  "clock.world.city_removed": "City removed"
+  "clock.world.city_removed": "City removed",
+  "about.qr_too_big": "QR too big",
+  "about.support_development": "Support development"
 }

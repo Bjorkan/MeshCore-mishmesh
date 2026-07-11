@@ -3,6 +3,8 @@
 #include <mishmesh/applets/onboarding_logo.h>   // MISHMESH_LOGO wordmark
 #include <mishmesh/core/AppletRegistry.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/AboutLocaleStrings.h>
 #include <mishmesh/core/StrUtil.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>   // snprintf
@@ -12,6 +14,14 @@ namespace mishmesh {
 // Full URL (with scheme) so a phone camera opens it directly. 27 bytes => a
 // small QR (~v2, 25 modules) that stays crisp at 2px/module on a 128x64 panel.
 static const char SUPPORT_URL[] = "https://ko-fi.com/burak_can";
+
+static const char* trAbout(AboutTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedAboutLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedAboutLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 const char* AboutApplet::qrTextForTest() const { return SUPPORT_URL; }
 
@@ -36,7 +46,7 @@ int AboutApplet::onRender(Canvas& c) {
   // ride in the leftover right column (same split as ChannelShareApplet).
   const int side = (h <= w) ? h : w;
   if (_qr.valid()) _qr.draw(c, 0, 0, side, side);
-  else c.drawTextCentered(fontBody(), 0, 0, side, h, "QR too big", DisplayDriver::LIGHT);
+  else c.drawTextCentered(fontBody(), 0, 0, side, h, trAbout(AboutTextId::AboutQrTooBig), DisplayDriver::LIGHT);
 
   const int rx = side + 4;
   if (rx < w) {
@@ -46,7 +56,7 @@ int AboutApplet::onRender(Canvas& c) {
     r.drawXbm(lx, 2, MISHMESH_LOGO, MISHMESH_LOGO_W, MISHMESH_LOGO_H);
 
     int y = 2 + MISHMESH_LOGO_H + 3;
-    y = r.drawTextWrapped(fontCaption(), 0, y, rw, "Support development",
+    y = r.drawTextWrapped(fontCaption(), 0, y, rw, trAbout(AboutTextId::AboutSupportDevelopment),
                           DisplayDriver::LIGHT) + 2;
     r.drawText(fontCaption(), 0, y, "ko-fi.com/", DisplayDriver::LIGHT); y += 6;
     r.drawText(fontCaption(), 0, y, "burak_can", DisplayDriver::LIGHT);
