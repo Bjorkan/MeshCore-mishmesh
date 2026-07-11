@@ -58,6 +58,21 @@ def cpp_string(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+def discovered_area_headers() -> List[Tuple[str, str, Path]]:
+    headers = list(AREA_HEADERS)
+    known = {prefix for prefix, _, _ in headers}
+    if not AREA_LOCALE_DIR.exists():
+        return headers
+    for area_dir in sorted(path for path in AREA_LOCALE_DIR.iterdir() if path.is_dir()):
+        prefix = f"{area_dir.name}."
+        if prefix in known:
+            continue
+        stem = enum_name(area_dir.name)
+        headers.append((prefix, stem, ROOT / "mishmesh" / "core" / f"{stem}LocaleStrings.h"))
+        known.add(prefix)
+    return headers
+
+
 def load_locale(path: Path) -> LocaleFile:
     tag = path.stem
     if not TAG_RE.fullmatch(tag):
@@ -277,10 +292,11 @@ def main() -> int:
     args = parser.parse_args()
     try:
         keys, locales = load_all()
-        split_prefixes = tuple(prefix for prefix, _, _ in AREA_HEADERS)
+        area_headers = discovered_area_headers()
+        split_prefixes = tuple(prefix for prefix, _, _ in area_headers)
         base_keys = [key for key in keys if not key.startswith(split_prefixes)]
         ok = write_or_check(HEADER_PATH, generate_header(base_keys, locales), args.check)
-        for prefix, stem, path in AREA_HEADERS:
+        for prefix, stem, path in area_headers:
             area_keys = [key for key in keys if key.startswith(prefix)]
             if area_keys:
                 ok = write_or_check(
