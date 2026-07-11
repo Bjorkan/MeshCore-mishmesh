@@ -4,11 +4,21 @@
 #include <mishmesh/core/StrUtil.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/ChatNotifyLocaleStrings.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/sound/Sounds.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 
 namespace mishmesh {
+
+static const char* trChatNotify(ChatNotifyTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedChatNotifyLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedChatNotifyLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 ChatNotifyApplet::ChatNotifyApplet() : Applet("Notify settings") {}
 
@@ -53,14 +63,14 @@ bool ChatNotifyApplet::onInput(InputEvent ev) {
 }
 
 const char* ChatNotifyApplet::label(int i) const {
-  if (soundRow(i)) return "Sound";
+  if (soundRow(i)) return trChatNotify(ChatNotifyTextId::ChatNotifySound);
   if (_isChannel) {
-    if (i == 0) return "All";
-    if (i == 1) return "Mentions only";
-    return "Mute";
+    if (i == 0) return trChatNotify(ChatNotifyTextId::ChatNotifyAll);
+    if (i == 1) return trChatNotify(ChatNotifyTextId::ChatNotifyMentionsOnly);
+    return trChatNotify(ChatNotifyTextId::ChatNotifyMute);
   } else {
-    if (i == 0) return "All";
-    return "Mute";
+    if (i == 0) return trChatNotify(ChatNotifyTextId::ChatNotifyAll);
+    return trChatNotify(ChatNotifyTextId::ChatNotifyMute);
   }
 }
 
