@@ -6,10 +6,20 @@
 #include <mishmesh/applets/RepeaterSettingsApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/RepeaterManageLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 
 namespace mishmesh {
+
+static const char* trRepeaterManage(RepeaterManageTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedRepeaterManageLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedRepeaterManageLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 void RepeaterManageApplet::setTarget(const uint8_t* pubKey, const char* name) {
   setTargetFields(_pub, _name, sizeof(_name), pubKey, name);
@@ -42,9 +52,12 @@ void RepeaterManageApplet::onStart(AppletContext& ctx) {
   repeaterSettingsApplet().onStart(ctx);     // resets menu selection
 
   _tabs.clear();
-  _tabs.addTab("Status",   (uint16_t)Icon::Radio);
-  _tabs.addTab("Cmd",      (uint16_t)Icon::Comment);
-  _tabs.addTab("Settings", (uint16_t)Icon::Settings);
+  _tabs.addTab(trRepeaterManage(RepeaterManageTextId::RepeaterManageStatus),
+               (uint16_t)Icon::Radio);
+  _tabs.addTab(trRepeaterManage(RepeaterManageTextId::RepeaterManageCommand),
+               (uint16_t)Icon::Comment);
+  _tabs.addTab(trRepeaterManage(RepeaterManageTextId::RepeaterManageSettings),
+               (uint16_t)Icon::Settings);
 
   // Land on the Status tab and auto-fire the first status request.
   activateTab(0);
