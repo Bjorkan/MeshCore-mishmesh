@@ -119,5 +119,18 @@
   "radio.frequency_mhz": "Frekvens (MHz)",
   "radio.tx_power_dbm": "Sändeffekt (dBm)",
   "radio.presets": "Förinställningar",
-  "radio.value": "Värde"
+  "radio.value": "Värde",
+  "time.time_zone": "Tidszon",
+  "time.time_format": "Tidsformat",
+  "time.date_format": "Datumformat",
+  "time.alarm_sound": "Alarmljud",
+  "time.alarm_volume": "Alarmvolym",
+  "time.timer_sound": "Timerljud",
+  "time.timer_volume": "Timervolym",
+  "time.set_automatically": "Ställ in automatiskt",
+  "time.set_date_time": "Ställ in datum och tid",
+  "time.system_volume": "System",
+  "time.select_to_save": "Tryck Select för att spara",
+  "sound.default": "Standard",
+  "sound.silent": "Tyst"
 }

@@ -3,6 +3,7 @@
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/ClockService.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/sound/SoundEngine.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
@@ -75,8 +76,8 @@ int SoundPickerApplet::rowForEncoded(uint8_t e) const {
 const char* SoundPickerApplet::label(int i) const {
   if (_clock) return sound::clockToneName(i);
   uint8_t e = encodedForRow(i);
-  if (e == sound::NOTIFY_TONE_DEFAULT && _perChat) return "Default";
-  if (e == sound::NOTIFY_TONE_SILENT) return "Silent";
+  if (e == sound::NOTIFY_TONE_DEFAULT && _perChat) return tr(TextId::SoundDefault);
+  if (e == sound::NOTIFY_TONE_SILENT) return tr(TextId::SoundSilent);
   return notifyToneName((int)e - sound::NOTIFY_TONE_BASE);
 }
 

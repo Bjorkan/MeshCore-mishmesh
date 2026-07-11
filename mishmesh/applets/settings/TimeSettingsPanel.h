@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mishmesh/core/SettingsPanel.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/widgets/ListMenu.h>
 #include <mishmesh/widgets/StepperDialog.h>
 
@@ -26,7 +27,7 @@ public:
     const char* value(int i) const override;
   };
 
-  const char* title() const override { return "Time & date"; }
+  const char* title() const override { return tr(TextId::SettingsTimeDate); }
   void begin(AppletContext& ctx) override;
   void onShow() override;
   int  renderBody(Canvas& c, int x, int y, int w, int h) override;

@@ -4,6 +4,7 @@
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/WorldClock.h>
 #include <mishmesh/core/TimeFormat.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/text/Fonts.h>
 
 namespace mishmesh {
@@ -37,7 +38,7 @@ void TimezonePickerApplet::onStart(AppletContext& ctx) {
 
 int TimezonePickerApplet::onRender(Canvas& c) {
   int w = c.width(), h = c.height();
-  int barH = drawTopBar(c, _bar, "Time zone", _app, w);   // title + battery
+  int barH = drawTopBar(c, _bar, tr(TextId::TimeTimeZone), _app, w);   // title + battery
   _list.draw(c, 0, barH + 1, w, h - barH - 1);
   return _list.needsAnimation() ? ListMenu::TICK_MS : 500;
 }

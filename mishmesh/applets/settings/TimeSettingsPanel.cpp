@@ -26,16 +26,16 @@ static void dateFmtStepLabel(int v, char* out, uint16_t cap) {
 }
 
 const char* TimeSettingsPanel::Model::label(int i) const {
-  static const char* LABELS[] = { "Time zone", "Time format", "Date format",
-                                  "Alarm sound", "Alarm volume",
-                                  "Timer sound", "Timer volume",
-                                  "Set automatically", "Set date & time" };
-  return (i >= 0 && i < 9) ? LABELS[i] : "";
+  static const TextId LABELS[] = { TextId::TimeTimeZone, TextId::TimeTimeFormat, TextId::TimeDateFormat,
+                                   TextId::TimeAlarmSound, TextId::TimeAlarmVolume,
+                                   TextId::TimeTimerSound, TextId::TimeTimerVolume,
+                                   TextId::TimeSetAutomatically, TextId::TimeSetDateTime };
+  return (i >= 0 && i < 9) ? tr(LABELS[i]) : "";
 }
 
 // 0 = follow the shared sound volume; 1..3 = fixed level (rings through Mute).
 static const char* ringVolumeName(uint8_t v) {
-  return v == 0 ? "System" : volumeLevelName(v);
+  return v == 0 ? tr(TextId::TimeSystemVolume) : volumeLevelName(v);
 }
 
 const char* TimeSettingsPanel::Model::value(int i) const {
@@ -116,12 +116,12 @@ bool TimeSettingsPanel::onInput(InputEvent ev) {
       } else {   // clock unset: use a day>12 sample so D/M vs M/D is unambiguous
         LocalTime s{}; s.year = 2026; s.month = 12; s.day = 31; s_dfSample = s;
       }
-      _stepper.configure("Date format", _app->dateFormat(), 0,
+      _stepper.configure(tr(TextId::TimeDateFormat), _app->dateFormat(), 0,
                          (int)DateFormat::COUNT - 1, dateFmtStepLabel);
       _editingDateFmt = true;
     } else if (i == Model::AlarmSound || i == Model::TimerSound) {
       bool alarm = i == Model::AlarmSound;
-      soundPickerApplet().setClock(alarm, alarm ? "Alarm sound" : "Timer sound");
+      soundPickerApplet().setClock(alarm, tr(alarm ? TextId::TimeAlarmSound : TextId::TimeTimerSound));
       if (_host) _host->push(&soundPickerApplet());
     } else if (i == Model::AlarmVolume || i == Model::TimerVolume) {
       // Cycle System -> Low -> Mid -> High in place, previewing the ring.

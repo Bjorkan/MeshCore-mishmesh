@@ -119,5 +119,18 @@
   "radio.frequency_mhz": "Frequency (MHz)",
   "radio.tx_power_dbm": "TX power (dBm)",
   "radio.presets": "Presets",
-  "radio.value": "Value"
+  "radio.value": "Value",
+  "time.time_zone": "Time zone",
+  "time.time_format": "Time format",
+  "time.date_format": "Date format",
+  "time.alarm_sound": "Alarm sound",
+  "time.alarm_volume": "Alarm volume",
+  "time.timer_sound": "Timer sound",
+  "time.timer_volume": "Timer volume",
+  "time.set_automatically": "Set automatically",
+  "time.set_date_time": "Set date & time",
+  "time.system_volume": "System",
+  "time.select_to_save": "Select to save",
+  "sound.default": "Default",
+  "sound.silent": "Silent"
 }

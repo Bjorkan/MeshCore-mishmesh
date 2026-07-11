@@ -1,6 +1,7 @@
 #include <mishmesh/applets/SetTimeApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
 
@@ -91,7 +92,7 @@ bool SetTimeApplet::onInput(InputEvent ev) {
 int SetTimeApplet::onRender(Canvas& c) {
   int w = c.width(), h = c.height();
   int fh = c.fontHeight(fontBody());
-  c.drawText(fontBody(), w / 2, 2, "Set date & time",
+  c.drawText(fontBody(), w / 2, 2, tr(TextId::TimeSetDateTime),
              DisplayDriver::LIGHT, TextAlign::Center);
 
   // Field text, indexed by logical Field, rendered to match the chosen format.
@@ -136,7 +137,7 @@ int SetTimeApplet::onRender(Canvas& c) {
   c.drawText(fontBody(), x, timeY, ":", DisplayDriver::LIGHT, TextAlign::Left); x += sepW(":");
   x += drawField(x, timeY, s[_order[4]], _field == 4);
 
-  c.drawText(fontBody(), w / 2, h - fh, "Select to save",
+  c.drawText(fontBody(), w / 2, h - fh, tr(TextId::TimeSelectToSave),
              DisplayDriver::LIGHT, TextAlign::Center);
   return 500;
 }
