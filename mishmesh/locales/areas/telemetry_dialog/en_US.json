@@ -1,7 +1,0 @@
-{
-  "telemetry_dialog.requesting": "Requesting...",
-  "telemetry_dialog.no_response": "No response",
-  "telemetry_dialog.no_fields": "No fields",
-  "telemetry_dialog.channel": "%s ch%d:",
-  "telemetry_dialog.field": "%s ch%d: %s"
-}

@@ -1,7 +1,0 @@
-{
-  "telemetry_dialog.requesting": "Begär...",
-  "telemetry_dialog.no_response": "Inget svar",
-  "telemetry_dialog.no_fields": "Inga fält",
-  "telemetry_dialog.channel": "%s kanal %d:",
-  "telemetry_dialog.field": "%s kanal %d: %s"
-}
