@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mishmesh/core/SettingsPanel.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/applets/settings/RadioStaging.h>
 #include <mishmesh/widgets/ListMenu.h>
 
@@ -10,7 +11,7 @@ namespace mishmesh {
 // staged RadioConfig loaded on begin(); applies once via AppServices on onHide().
 class RadioSettingsPanel : public SettingsPanel, public RadioStagingTarget {
 public:
-  const char* title() const override { return "Radio"; }
+  const char* title() const override { return tr(TextId::SettingsRadio); }
   void begin(AppletContext& ctx) override;
   void onHide() override;
   int  renderBody(Canvas& c, int x, int y, int w, int h) override;

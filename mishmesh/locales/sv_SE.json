@@ -1,5 +1,8 @@
 {
-  "_meta": {"name": "Swedish", "nativeName": "Svenska"},
+  "_meta": {
+    "name": "Swedish",
+    "nativeName": "Svenska"
+  },
   "app.settings": "Inställningar",
   "settings.home": "Hem",
   "settings.contacts": "Kontakter",
@@ -103,5 +106,18 @@
   "advert.toast.zero_hop_sent": "Nollhoppsannons skickad",
   "advert.toast.failed": "Annonsering misslyckades",
   "advert.settings.device_name": "Enhetsnamn",
-  "advert.settings.share_position": "Dela position"
+  "advert.settings.share_position": "Dela position",
+  "radio.preset": "Förinställning",
+  "radio.frequency": "Frekvens",
+  "radio.bandwidth": "Bandbredd",
+  "radio.spreading_factor": "Spridningsfaktor",
+  "radio.coding_rate": "Kodningsgrad",
+  "radio.transmit_power": "Sändeffekt",
+  "radio.repeater": "Repeater",
+  "radio.custom": "Anpassad",
+  "radio.off": "Av",
+  "radio.frequency_mhz": "Frekvens (MHz)",
+  "radio.tx_power_dbm": "Sändeffekt (dBm)",
+  "radio.presets": "Förinställningar",
+  "radio.value": "Värde"
 }

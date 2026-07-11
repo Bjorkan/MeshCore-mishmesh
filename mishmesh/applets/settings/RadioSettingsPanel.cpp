@@ -7,21 +7,18 @@
 #include <mishmesh/applets/RepeaterApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 namespace mishmesh {
 
 const char* RadioSettingsPanel::Model::label(int i) const {
-  switch (i) {
-    case 0: return "Preset";
-    case 1: return "Frequency";
-    case 2: return "Bandwidth";
-    case 3: return "Spreading factor";
-    case 4: return "Coding rate";
-    case 5: return "Transmit power";
-    default: return "Repeater";
-  }
+  static const TextId LABELS[Model::ROW_COUNT] = {
+    TextId::RadioPreset, TextId::RadioFrequency, TextId::RadioBandwidth,
+    TextId::RadioSpreadingFactor, TextId::RadioCodingRate,
+    TextId::RadioTransmitPower, TextId::RadioRepeater };
+  return (i >= 0 && i < Model::ROW_COUNT) ? tr(LABELS[i]) : "";
 }
 
 const char* RadioSettingsPanel::Model::value(int i) const {
@@ -29,13 +26,13 @@ const char* RadioSettingsPanel::Model::value(int i) const {
   switch (i) {
     case 0: {
       int m = matchPreset(cfg->freqMhz, cfg->bwKhz, cfg->sf, cfg->cr);
-      return m >= 0 ? PRESETS[m].name : "Custom";
+      return m >= 0 ? PRESETS[m].name : tr(TextId::RadioCustom);
     }
     case 1: case 2: case 3: case 4: case 5:
       return formatRadioField(vbuf, sizeof(vbuf), i, *cfg);
     default:   // Repeater: Off, or the active off-grid frequency
       if (cfg->repeater) { snprintf(vbuf, sizeof(vbuf), "%.3f MHz", cfg->freqMhz); return vbuf; }
-      return "Off";
+      return tr(TextId::RadioOff);
   }
 }
 
@@ -93,13 +90,13 @@ void RadioSettingsPanel::onTxDone(void* ctx, const char* text) {
 
 void RadioSettingsPanel::editFrequency() {
   snprintf(_scratch, sizeof(_scratch), "%g", _staged.freqMhz);
-  keypadApplet().configureNumeric(_scratch, sizeof(_scratch) - 1, "Frequency (MHz)",
+  keypadApplet().configureNumeric(_scratch, sizeof(_scratch) - 1, tr(TextId::RadioFrequencyMhz),
                                   &RadioSettingsPanel::onFreqDone, this);
   if (_host) _host->push(&keypadApplet());
 }
 void RadioSettingsPanel::editTxPower() {
   snprintf(_scratch, sizeof(_scratch), "%d", (int)_staged.txPowerDbm);
-  keypadApplet().configureNumeric(_scratch, sizeof(_scratch) - 1, "TX power (dBm)",
+  keypadApplet().configureNumeric(_scratch, sizeof(_scratch) - 1, tr(TextId::RadioTxPowerDbm),
                                   &RadioSettingsPanel::onTxDone, this);
   if (_host) _host->push(&keypadApplet());
 }
@@ -114,15 +111,15 @@ bool RadioSettingsPanel::onInput(InputEvent ev) {
       return true;
     case 1: editFrequency(); return true;
     case 2:
-      radioValuePickerApplet().configure(this, RadioField::Bandwidth, "Bandwidth");
+      radioValuePickerApplet().configure(this, RadioField::Bandwidth, tr(TextId::RadioBandwidth));
       if (_host) _host->push(&radioValuePickerApplet());
       return true;
     case 3:
-      radioValuePickerApplet().configure(this, RadioField::SF, "Spreading factor");
+      radioValuePickerApplet().configure(this, RadioField::SF, tr(TextId::RadioSpreadingFactor));
       if (_host) _host->push(&radioValuePickerApplet());
       return true;
     case 4:
-      radioValuePickerApplet().configure(this, RadioField::CR, "Coding rate");
+      radioValuePickerApplet().configure(this, RadioField::CR, tr(TextId::RadioCodingRate));
       if (_host) _host->push(&radioValuePickerApplet());
       return true;
     case 5: editTxPower(); return true;

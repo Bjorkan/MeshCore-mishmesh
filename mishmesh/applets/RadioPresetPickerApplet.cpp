@@ -2,6 +2,7 @@
 #include <mishmesh/applets/AppletChrome.h>
 #include <mishmesh/applets/settings/RadioPresets.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
 
@@ -44,7 +45,7 @@ void RadioPresetPickerApplet::onStart(AppletContext& ctx) {
 
 int RadioPresetPickerApplet::onRender(Canvas& c) {
   int w = c.width(), h = c.height();
-  int barH = drawTopBar(c, _bar, "Presets", _app, w);   // title + battery
+  int barH = drawTopBar(c, _bar, tr(TextId::RadioPresets), _app, w);   // title + battery
   _list.draw(c, 0, barH + 1, w, h - barH - 1);
   return _list.needsAnimation() ? ListMenu::TICK_MS : 500;
 }

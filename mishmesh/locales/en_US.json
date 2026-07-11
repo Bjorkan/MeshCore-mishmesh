@@ -1,5 +1,8 @@
 {
-  "_meta": {"name": "English", "nativeName": "English"},
+  "_meta": {
+    "name": "English",
+    "nativeName": "English"
+  },
   "app.settings": "Settings",
   "settings.home": "Home",
   "settings.contacts": "Contacts",
@@ -103,5 +106,18 @@
   "advert.toast.zero_hop_sent": "Zero-hop advert sent",
   "advert.toast.failed": "Advert failed",
   "advert.settings.device_name": "Device name",
-  "advert.settings.share_position": "Share position"
+  "advert.settings.share_position": "Share position",
+  "radio.preset": "Preset",
+  "radio.frequency": "Frequency",
+  "radio.bandwidth": "Bandwidth",
+  "radio.spreading_factor": "Spreading factor",
+  "radio.coding_rate": "Coding rate",
+  "radio.transmit_power": "Transmit power",
+  "radio.repeater": "Repeater",
+  "radio.custom": "Custom",
+  "radio.off": "Off",
+  "radio.frequency_mhz": "Frequency (MHz)",
+  "radio.tx_power_dbm": "TX power (dBm)",
+  "radio.presets": "Presets",
+  "radio.value": "Value"
 }

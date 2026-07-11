@@ -2,6 +2,7 @@
 #include <mishmesh/applets/AppletChrome.h>
 #include <mishmesh/core/StrUtil.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/text/Fonts.h>
 #include <math.h>
 #include <stdio.h>
@@ -21,7 +22,7 @@ RadioValuePickerApplet::RadioValuePickerApplet() : Applet("Radio") {}
 
 void RadioValuePickerApplet::configure(RadioStagingTarget* tgt, RadioField field, const char* title) {
   _tgt = tgt; _field = field;
-  copyStr(_title, sizeof(_title), title ? title : "Value");
+  copyStr(_title, sizeof(_title), title ? title : tr(TextId::RadioValue));
 }
 
 const float* RadioValuePickerApplet::options() const {
