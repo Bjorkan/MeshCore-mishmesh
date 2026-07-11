@@ -1,17 +1,36 @@
 #include <mishmesh/widgets/TelemetryDialog.h>
 #include <mishmesh/widgets/Modal.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/TelemetryDialogLocaleStrings.h>
 #include <helpers/sensors/LPPDataHelpers.h>
 #include <stdio.h>
 
 namespace mishmesh {
 
-void TelemetryDialog::setWaiting() { _text.clear(); _text.addLine("Requesting..."); }
-void TelemetryDialog::setTimeout() { _text.clear(); _text.addLine("No response"); }
+static const char* trTelemetryDialog(TelemetryDialogTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedTelemetryDialogLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedTelemetryDialogLocaleString(0, id);
+  return fallback ? fallback : "";
+}
+
+void TelemetryDialog::setWaiting() {
+  _text.clear();
+  _text.addLine(trTelemetryDialog(TelemetryDialogTextId::TelemetryDialogRequesting));
+}
+void TelemetryDialog::setTimeout() {
+  _text.clear();
+  _text.addLine(trTelemetryDialog(TelemetryDialogTextId::TelemetryDialogNoResponse));
+}
 
 void TelemetryDialog::setResult(const TelemetryView& v) {
   _text.clear();
-  if (v.count == 0) { _text.addLine("No fields"); return; }
+  if (v.count == 0) {
+    _text.addLine(trTelemetryDialog(TelemetryDialogTextId::TelemetryDialogNoFields));
+    return;
+  }
   char val[24];
   for (int i = 0; i < v.count; i++) {
     const TelemetryField& f = v.fields[i];
@@ -19,10 +38,12 @@ void TelemetryDialog::setResult(const TelemetryView& v) {
     // GPS coords are too wide for the narrow modal; give them their own line so
     // they aren't ellipsized (mirrors the "Public key:" split in view-details).
     if (f.type == LPP_GPS) {
-      _text.addf("%s ch%d:", telemTypeName(f.type), f.channel);
+      _text.addf(trTelemetryDialog(TelemetryDialogTextId::TelemetryDialogChannel),
+                 telemTypeName(f.type), f.channel);
       _text.addf(" %s", val);
     } else {
-      _text.addf("%s ch%d: %s", telemTypeName(f.type), f.channel, val);
+      _text.addf(trTelemetryDialog(TelemetryDialogTextId::TelemetryDialogField),
+                 telemTypeName(f.type), f.channel, val);
     }
   }
 }
