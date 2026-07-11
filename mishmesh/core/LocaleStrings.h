@@ -64,6 +64,11 @@ enum class TextId : uint16_t {
   ContactsTypeRoom,
   ContactsTypeSensor,
   ContactsTypeContact,
+  ContactsPermissionsAllowTelemetry,
+  ContactsPermissionsIncludeLocation,
+  ContactsPermissionsIncludeSensors,
+  ContactsFullTitle,
+  ContactsFullDismiss,
   Count
 };
 
@@ -144,6 +149,11 @@ inline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {
     "Room",
     "Sensor",
     "Contact",
+    "Allow telemetry",
+    "Include location",
+    "Include sensors",
+    "Contacts full",
+    "Press any key to dismiss",
   };
   static const char* const STRINGS_1[] = {
     "Inställningar",
@@ -203,6 +213,11 @@ inline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {
     "Rum",
     "Sensor",
     "Kontakt",
+    "Tillåt telemetri",
+    "Inkludera position",
+    "Inkludera sensorer",
+    "Kontaktlista full",
+    "Tryck för att stänga",
   };
   static const char* const* const TABLES[] = {
     STRINGS_0,

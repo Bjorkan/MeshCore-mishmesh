@@ -1,6 +1,7 @@
 #include <mishmesh/applets/ContactsFullApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/sound/Sounds.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
@@ -30,13 +31,13 @@ int ContactsFullApplet::onRender(Canvas& c) {
 
   int w = c.width(), h = c.height();
   c.drawGlyph(iconFont(), w / 2 - 6, 4, (uint16_t)Icon::Warning, DisplayDriver::LIGHT);
-  c.drawText(fontSubtitle(), w / 2, 19, "Contacts full", DisplayDriver::LIGHT, TextAlign::Center);
+  c.drawText(fontSubtitle(), w / 2, 19, tr(TextId::ContactsFullTitle), DisplayDriver::LIGHT, TextAlign::Center);
 
   char buf[12];
   snprintf(buf, sizeof(buf), "%u/%u", (unsigned)_used, (unsigned)_max);
   c.drawText(fontNum(), w / 2, 33, buf, DisplayDriver::LIGHT, TextAlign::Center);
 
-  c.drawText(fontCaption(), w / 2, h - 7, "Press any key to dismiss",
+  c.drawText(fontCaption(), w / 2, h - 7, tr(TextId::ContactsFullDismiss),
              DisplayDriver::LIGHT, TextAlign::Center);
   return 250;
 }

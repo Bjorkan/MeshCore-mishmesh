@@ -59,5 +59,10 @@
   "contacts.type.repeater": "Repeater",
   "contacts.type.room": "Rum",
   "contacts.type.sensor": "Sensor",
-  "contacts.type.contact": "Kontakt"
+  "contacts.type.contact": "Kontakt",
+  "contacts.permissions.allow_telemetry": "Tillåt telemetri",
+  "contacts.permissions.include_location": "Inkludera position",
+  "contacts.permissions.include_sensors": "Inkludera sensorer",
+  "contacts.full.title": "Kontaktlista full",
+  "contacts.full.dismiss": "Tryck för att stänga"
 }

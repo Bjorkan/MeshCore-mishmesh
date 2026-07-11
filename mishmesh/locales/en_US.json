@@ -59,5 +59,10 @@
   "contacts.type.repeater": "Repeater",
   "contacts.type.room": "Room",
   "contacts.type.sensor": "Sensor",
-  "contacts.type.contact": "Contact"
+  "contacts.type.contact": "Contact",
+  "contacts.permissions.allow_telemetry": "Allow telemetry",
+  "contacts.permissions.include_location": "Include location",
+  "contacts.permissions.include_sensors": "Include sensors",
+  "contacts.full.title": "Contacts full",
+  "contacts.full.dismiss": "Press any key to dismiss"
 }

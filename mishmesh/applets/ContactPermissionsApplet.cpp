@@ -2,13 +2,15 @@
 #include <mishmesh/applets/AppletChrome.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 
 namespace mishmesh {
 
-static const char* ROW_LABELS[ContactPermissionsApplet::ROW_COUNT] = {
-  "Allow telemetry", "Include location", "Include sensors",
+static const TextId ROW_LABELS[ContactPermissionsApplet::ROW_COUNT] = {
+  TextId::ContactsPermissionsAllowTelemetry, TextId::ContactsPermissionsIncludeLocation,
+  TextId::ContactsPermissionsIncludeSensors,
 };
 
 ContactPermissionsApplet::ContactPermissionsApplet()
@@ -30,7 +32,7 @@ void ContactPermissionsApplet::setTarget(const uint8_t* pubKey, const char* name
 }
 
 const char* ContactPermissionsApplet::label(int i) const {
-  return (i >= 0 && i < ROW_COUNT) ? ROW_LABELS[i] : "";
+  return (i >= 0 && i < ROW_COUNT) ? tr(ROW_LABELS[i]) : "";
 }
 
 bool ContactPermissionsApplet::toggleState(int i) const {
