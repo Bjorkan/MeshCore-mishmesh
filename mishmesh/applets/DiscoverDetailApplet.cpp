@@ -3,14 +3,25 @@
 #include <mishmesh/applets/ContactDetailApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/ContactFormat.h>
+#include <mishmesh/core/DiscoverDetailLocaleStrings.h>
 #include <mishmesh/core/Geo.h>
+#include <mishmesh/core/Locale.h>
 #include <stdio.h>
 #include <string.h>
 
 namespace mishmesh {
 
-static const char* ACTION_LABELS[DiscoverDetailApplet::ACTION_COUNT] = {
-  "Add to contacts", "View details",
+static const char* trDiscoverDetail(DiscoverDetailTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedDiscoverDetailLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedDiscoverDetailLocaleString(0, id);
+  return fallback ? fallback : "";
+}
+
+static const DiscoverDetailTextId ACTION_LABELS[DiscoverDetailApplet::ACTION_COUNT] = {
+  DiscoverDetailTextId::DiscoverDetailAddToContacts,
+  DiscoverDetailTextId::DiscoverDetailViewDetails,
 };
 
 DiscoverDetailApplet::DiscoverDetailApplet()
@@ -21,7 +32,7 @@ DiscoverDetailApplet::DiscoverDetailApplet()
 }
 
 const char* DiscoverDetailApplet::label(int i) const {
-  return (i >= 0 && i < ACTION_COUNT) ? ACTION_LABELS[i] : "";
+  return (i >= 0 && i < ACTION_COUNT) ? trDiscoverDetail(ACTION_LABELS[i]) : "";
 }
 
 void DiscoverDetailApplet::setTarget(const ContactView& v) {
@@ -54,11 +65,15 @@ void DiscoverDetailApplet::buildInfo() {
   _card.set(_displayName, _infoLine);
 
   _details.clear();
-  _details.addf("Type: %s", contactTypeName(_type));
-  if (_distKm >= 0) _details.addf("Distance: %.2f km", (double)_distKm);
-  if (age[0])       _details.addf("Last heard: %s ago", age);
-  if (_hasLoc)      _details.addf("GPS: %.5f, %.5f", _gpsLat / 1e6, _gpsLon / 1e6);
-  _details.addLine("Public key:");
+  _details.addf(trDiscoverDetail(DiscoverDetailTextId::DiscoverDetailType), contactTypeName(_type));
+  if (_distKm >= 0)
+    _details.addf(trDiscoverDetail(DiscoverDetailTextId::DiscoverDetailDistance), (double)_distKm);
+  if (age[0])
+    _details.addf(trDiscoverDetail(DiscoverDetailTextId::DiscoverDetailLastHeard), age);
+  if (_hasLoc)
+    _details.addf(trDiscoverDetail(DiscoverDetailTextId::DiscoverDetailGps),
+                  _gpsLat / 1e6, _gpsLon / 1e6);
+  _details.addLine(trDiscoverDetail(DiscoverDetailTextId::DiscoverDetailPublicKey));
   for (int r = 0; r < PUBKEY_LEN; r += 8) {
     char hex[20];
     for (int j = 0; j < 8; j++) snprintf(hex + j * 2, 3, "%02X", _fullKey[r + j]);
@@ -103,11 +118,11 @@ bool DiscoverDetailApplet::onInput(InputEvent ev) {
     if (_svc->addDiscovered(_pubkey)) {
       // Hand off to the new contact's detail page in place of this one, so Back still
       // returns to the Discover list rather than to this (now-stale) discovery screen.
-      if (_host) _host->postToast("Added to contacts");
+      if (_host) _host->postToast(trDiscoverDetail(DiscoverDetailTextId::DiscoverDetailAdded));
       contactDetailApplet().setTarget(_pubkey);
       if (_host) _host->replace(&contactDetailApplet());
     } else if (_host) {
-      _host->postToast("Couldn't add contact");
+      _host->postToast(trDiscoverDetail(DiscoverDetailTextId::DiscoverDetailAddFailed));
       _host->pop();
     }
     return true;

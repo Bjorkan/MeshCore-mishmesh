@@ -1,0 +1,11 @@
+{
+  "discover_detail.add_to_contacts": "Add to contacts",
+  "discover_detail.view_details": "View details",
+  "discover_detail.type": "Type: %s",
+  "discover_detail.distance": "Distance: %.2f km",
+  "discover_detail.last_heard": "Last heard: %s ago",
+  "discover_detail.gps": "GPS: %.5f, %.5f",
+  "discover_detail.public_key": "Public key:",
+  "discover_detail.added": "Added to contacts",
+  "discover_detail.add_failed": "Couldn't add contact"
+}
