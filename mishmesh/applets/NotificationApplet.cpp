@@ -3,10 +3,20 @@
 #include "MessageThreadApplet.h"
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/NotificationLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <cstdio>
 
 namespace mishmesh {
+
+static const char* trNotification(NotificationTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedNotificationLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedNotificationLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 static const uint32_t AUTO_MS = 8000;   // auto-dismiss when left untouched
 
@@ -74,15 +84,17 @@ int NotificationApplet::onRender(Canvas& c) {
   int fb = card.fontHeight(fontBody());  if (fb <= 0) fb = 8;
   int hIcon = (uint16_t)(_isChannel ? Icon::Users : Icon::Message);
   card.drawGlyph(iconFont(), 3, 1 + (HDR - 1 - gh) / 2, (uint16_t)hIcon, DisplayDriver::DARK);
-  const char* hdr = (_isChannel && _name[0]) ? _name : "New message";
+  const char* hdr = (_isChannel && _name[0]) ? _name
+      : trNotification(NotificationTextId::NotificationNewMessage);
   card.drawTextEllipsized(fontBody(), 18, 1 + (HDR - 1 - fb) / 2, W - 18 - 8, hdr, DisplayDriver::DARK);
   card.drawText(fontBody(), W - 4, 1 + (HDR - 1 - fb) / 2, ">", DisplayDriver::DARK, TextAlign::Right);
 
   int lh = card.lineHeight(fontBody());  if (lh <= 0) lh = 10;
 
   // Sender line: DM => contact; channel => the person who posted.
-  const char* who = _isChannel ? (_sender[0] ? _sender : "Someone")
-                               : (_name[0]   ? _name   : "Unknown");
+  const char* who = _isChannel
+      ? (_sender[0] ? _sender : trNotification(NotificationTextId::NotificationSomeone))
+      : (_name[0] ? _name : trNotification(NotificationTextId::NotificationUnknown));
   int y = HDR + 2;
   card.drawTextEllipsized(fontBody(), 3, y, W - 6, who, DisplayDriver::LIGHT);
   y += lh;
@@ -106,11 +118,15 @@ int NotificationApplet::onRender(Canvas& c) {
   card.fillStipple(3, footY - 2, W - 6, 1, DisplayDriver::LIGHT);
   if (_otherUnread > 0) {
     char b[24];
-    snprintf(b, sizeof(b), "%u more unread", (unsigned)_otherUnread);
+    snprintf(b, sizeof(b),
+             trNotification(NotificationTextId::NotificationMoreUnread),
+             (unsigned)_otherUnread);
     card.drawGlyph(iconFont(), 3, footY + (FOOT - gh) / 2, (uint16_t)Icon::Mail, DisplayDriver::LIGHT);
     card.drawText(fontCaption(), 16, footY + (FOOT - cap) / 2, b, DisplayDriver::LIGHT);
   } else {
-    card.drawText(fontCaption(), 3, footY + (FOOT - cap) / 2, "Back to dismiss", DisplayDriver::LIGHT);
+    card.drawText(fontCaption(), 3, footY + (FOOT - cap) / 2,
+                  trNotification(NotificationTextId::NotificationBackToDismiss),
+                  DisplayDriver::LIGHT);
   }
 
   card.drawRoundRect(0, 0, W, H, DisplayDriver::LIGHT);   // rounded outer frame on top

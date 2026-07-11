@@ -1,0 +1,7 @@
+{
+  "notification.new_message": "Nytt meddelande",
+  "notification.someone": "Någon",
+  "notification.unknown": "Okänd",
+  "notification.more_unread": "%u fler olästa",
+  "notification.back_to_dismiss": "Bakåt för att stänga"
+}
