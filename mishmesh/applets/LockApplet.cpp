@@ -1,6 +1,8 @@
 #include <mishmesh/applets/LockApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/LockLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <mishmesh/sound/SoundEngine.h>
 #include <mishmesh/sound/Sounds.h>
@@ -8,6 +10,14 @@
 #include <math.h>
 
 namespace mishmesh {
+
+static const char* trLock(LockTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedLockLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedLockLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 // A fat pixel: draws a filled square so the shackle stroke is a few px wide and
 // stays connected after rotation (axis-aligned rects can't slant).
@@ -161,9 +171,9 @@ int LockApplet::onRender(Canvas& c) {
     }
   }
 
-  const char* hint = (_mode == Unlocking) ? "Unlocked"
-                   : (_mode == Locking)   ? "Locked"
-                                          : "Back x3 to unlock";
+  const char* hint = (_mode == Unlocking) ? trLock(LockTextId::LockUnlocked)
+                   : (_mode == Locking)   ? trLock(LockTextId::LockLocked)
+                                          : trLock(LockTextId::LockBackThree);
   c.drawText(f, w / 2, textY, hint, DisplayDriver::LIGHT, TextAlign::Center);
 
   if (_flash) _flash--;
