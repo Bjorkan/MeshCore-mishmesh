@@ -22,6 +22,7 @@ struct AppletRegistration {
 
 void registerApplet(AppletRegistration* reg);
 AppletRegistration* registeredApplets();
+const char* appletDisplayLabel(const AppletRegistration* reg);
 void resetRegistry();
 
 #define MISHMESH_CONCAT_(a, b) a##b

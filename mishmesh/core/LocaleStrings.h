@@ -21,6 +21,12 @@ enum class TextId : uint16_t {
   HomeScreenSleep,
   HomeLeftShortcut,
   HomeRightShortcut,
+  AppMessages,
+  AppContacts,
+  AppAdvert,
+  AppClock,
+  AppAirtime,
+  AppAbout,
   Count
 };
 
@@ -58,6 +64,12 @@ inline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {
     "Screen sleep",
     "Left shortcut",
     "Right shortcut",
+    "Messages",
+    "Contacts",
+    "Advert",
+    "Clock",
+    "Airtime",
+    "About",
   };
   static const char* const STRINGS_1[] = {
     "Inställningar",
@@ -74,6 +86,12 @@ inline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {
     "Skärmsläckning",
     "Vänster genväg",
     "Höger genväg",
+    "Meddelanden",
+    "Kontakter",
+    "Annonsera",
+    "Klocka",
+    "Sändtid",
+    "Om",
   };
   static const char* const* const TABLES[] = {
     STRINGS_0,

@@ -25,7 +25,7 @@ public:
   bool onInput(InputEvent ev) override;
 
   int count() const override { return _count; }
-  const char* label(int i) const override { return _entries[i]->label; }
+  const char* label(int i) const override { return appletDisplayLabel(_entries[i]); }
   uint16_t icon(int i) const override { return _entries[i]->icon; }
   // [mishmesh]
   const char* value(int i) const override;

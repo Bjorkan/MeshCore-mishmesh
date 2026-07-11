@@ -1,8 +1,5 @@
 {
-  "_meta": {
-    "name": "Swedish",
-    "nativeName": "Svenska"
-  },
+  "_meta": {"name": "Swedish", "nativeName": "Svenska"},
   "app.settings": "Inställningar",
   "settings.home": "Hem",
   "settings.contacts": "Kontakter",
@@ -16,5 +13,11 @@
   "home.battery_percent": "Batteriprocent",
   "home.screen_sleep": "Skärmsläckning",
   "home.left_shortcut": "Vänster genväg",
-  "home.right_shortcut": "Höger genväg"
+  "home.right_shortcut": "Höger genväg",
+  "app.messages": "Meddelanden",
+  "app.contacts": "Kontakter",
+  "app.advert": "Annonsera",
+  "app.clock": "Klocka",
+  "app.airtime": "Sändtid",
+  "app.about": "Om"
 }

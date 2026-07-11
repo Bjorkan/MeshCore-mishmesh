@@ -1,8 +1,5 @@
 {
-  "_meta": {
-    "name": "English",
-    "nativeName": "English"
-  },
+  "_meta": {"name": "English", "nativeName": "English"},
   "app.settings": "Settings",
   "settings.home": "Home",
   "settings.contacts": "Contacts",
@@ -16,5 +13,11 @@
   "home.battery_percent": "Battery percent",
   "home.screen_sleep": "Screen sleep",
   "home.left_shortcut": "Left shortcut",
-  "home.right_shortcut": "Right shortcut"
+  "home.right_shortcut": "Right shortcut",
+  "app.messages": "Messages",
+  "app.contacts": "Contacts",
+  "app.advert": "Advert",
+  "app.clock": "Clock",
+  "app.airtime": "Airtime",
+  "app.about": "About"
 }
