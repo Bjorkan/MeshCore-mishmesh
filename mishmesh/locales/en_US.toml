@@ -124,3 +124,24 @@ quick_replies = "Quick replies"
 dm_acks = "DM acks"
 channel_msgs = "Channel msgs"
 direct_msgs = "Direct msgs"
+
+[advert.send]
+zero_hop = "Zero hop"
+flood_routed = "Flood routed"
+
+[advert.tabs]
+advert = "Advert"
+recent = "Recent"
+settings = "Settings"
+
+[advert.empty]
+no_adverts = "No adverts yet"
+
+[advert.toast]
+flood_sent = "Flood advert sent"
+zero_hop_sent = "Zero-hop advert sent"
+failed = "Advert failed"
+
+[advert.settings]
+device_name = "Device name"
+share_position = "Share position"

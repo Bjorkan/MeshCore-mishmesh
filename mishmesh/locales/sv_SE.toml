@@ -124,3 +124,24 @@ quick_replies = "Snabbsvar"
 dm_acks = "DM-kvittenser"
 channel_msgs = "Kanalmeddelanden"
 direct_msgs = "Direktmeddelanden"
+
+[advert.send]
+zero_hop = "Noll hopp"
+flood_routed = "Flood-routad"
+
+[advert.tabs]
+advert = "Annonsera"
+recent = "Senaste"
+settings = "Inställningar"
+
+[advert.empty]
+no_adverts = "Inga annonser än"
+
+[advert.toast]
+flood_sent = "Flood-annons skickad"
+zero_hop_sent = "Nollhoppsannons skickad"
+failed = "Annonsering misslyckades"
+
+[advert.settings]
+device_name = "Enhetsnamn"
+share_position = "Dela position"
