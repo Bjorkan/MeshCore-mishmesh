@@ -5,7 +5,7 @@ The English file is the canonical key set. Other locales may omit keys; the
 runtime falls back to English for those entries. Unknown keys and placeholder
 mismatches are rejected so spelling mistakes do not silently ship.
 
-System-info strings are emitted to a separate generated header to keep the
+Large UI areas may be emitted to separate generated headers to keep the
 original TextId table stable while still using the same locale JSON files.
 """
 
@@ -17,12 +17,15 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCALE_DIR = ROOT / "mishmesh" / "locales"
 HEADER_PATH = ROOT / "mishmesh" / "core" / "LocaleStrings.h"
-SYSTEM_INFO_HEADER_PATH = ROOT / "mishmesh" / "core" / "SystemInfoLocaleStrings.h"
+AREA_HEADERS: List[Tuple[str, str, Path]] = [
+    ("system_info.", "SystemInfo", ROOT / "mishmesh" / "core" / "SystemInfoLocaleStrings.h"),
+    ("clock.", "Clock", ROOT / "mishmesh" / "core" / "ClockLocaleStrings.h"),
+]
 TAG_RE = re.compile(r"^[a-z]{2}_[A-Z]{2}$")
 PLACEHOLDER_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
@@ -172,7 +175,7 @@ inline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {{
 """
 
 
-def generate_system_info_header(keys: Iterable[str], locales: List[LocaleFile]) -> str:
+def generate_area_header(keys: Iterable[str], locales: List[LocaleFile], stem: str) -> str:
     key_list = list(keys)
     enum_rows = "\n".join(f"  {enum_name(key)}," for key in key_list)
 
@@ -197,18 +200,18 @@ def generate_system_info_header(keys: Iterable[str], locales: List[LocaleFile]) 
 
 namespace mishmesh {{
 
-enum class SystemInfoTextId : uint16_t {{
+enum class {stem}TextId : uint16_t {{
 {enum_rows}
   Count
 }};
 
-inline const char* generatedSystemInfoLocaleString(uint8_t localeIndex, SystemInfoTextId id) {{
+inline const char* generated{stem}LocaleString(uint8_t localeIndex, {stem}TextId id) {{
 {chr(10).join(tables)}
   static const char* const* const TABLES[] = {{
 {table_refs}
   }};
   const uint16_t textIndex = (uint16_t)id;
-  if (localeIndex >= {len(locales)} || textIndex >= (uint16_t)SystemInfoTextId::Count)
+  if (localeIndex >= {len(locales)} || textIndex >= (uint16_t){stem}TextId::Count)
     return nullptr;
   return TABLES[localeIndex][textIndex];
 }}
@@ -235,15 +238,17 @@ def main() -> int:
     args = parser.parse_args()
     try:
         keys, locales = load_all()
-        system_info_keys = [key for key in keys if key.startswith("system_info.")]
-        base_keys = [key for key in keys if not key.startswith("system_info.")]
+        split_prefixes = tuple(prefix for prefix, _, _ in AREA_HEADERS)
+        base_keys = [key for key in keys if not key.startswith(split_prefixes)]
         ok = write_or_check(HEADER_PATH, generate_header(base_keys, locales), args.check)
-        if system_info_keys:
-            ok = write_or_check(
-                SYSTEM_INFO_HEADER_PATH,
-                generate_system_info_header(system_info_keys, locales),
-                args.check,
-            ) and ok
+        for prefix, stem, path in AREA_HEADERS:
+            area_keys = [key for key in keys if key.startswith(prefix)]
+            if area_keys:
+                ok = write_or_check(
+                    path,
+                    generate_area_header(area_keys, locales, stem),
+                    args.check,
+                ) and ok
         return 0 if ok else 1
     except ValueError as exc:
         print(f"locale generation failed: {exc}", file=sys.stderr)

@@ -65,7 +65,7 @@ private:
     AppServices* app = nullptr;
     enum Row : int { Time, Enabled };
     int count() const override { return 2; }
-    const char* label(int i) const override { return i == Time ? "Time" : "Enabled"; }
+    const char* label(int i) const override;
     const char* value(int i) const override;
     bool isToggle(int i) const override { return i == Enabled; }
     bool toggleState(int) const override { return clockService().alarmEnabled(); }

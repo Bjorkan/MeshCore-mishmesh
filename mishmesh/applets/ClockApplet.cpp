@@ -3,18 +3,23 @@
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/AppletRegistry.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/ClockLocaleStrings.h>
 #include <mishmesh/core/TimeFormat.h>
 #include <mishmesh/core/WorldClock.h>
 #include <mishmesh/widgets/Modal.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
 #include <string.h>
-
 namespace mishmesh {
-
 static const int BAR_H = 13;
-
-// "MM:SS.d" under an hour, then "H:MM:SS" (fontNum has no room for both).
+static const char* trClock(ClockTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedClockLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedClockLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 static void fmtStopwatch(char* out, size_t cap, uint32_t ms) {
   if (ms >= 3600000u)
     snprintf(out, cap, "%u:%02u:%02u", (unsigned)(ms / 3600000u),
@@ -23,8 +28,6 @@ static void fmtStopwatch(char* out, size_t cap, uint32_t ms) {
     snprintf(out, cap, "%02u:%02u.%u", (unsigned)(ms / 60000u),
              (unsigned)((ms / 1000u) % 60), (unsigned)((ms / 100u) % 10));
 }
-
-// Countdown rounds up so the display hits 00:00 exactly when the timer fires.
 static void fmtCountdown(char* out, size_t cap, uint32_t ms) {
   uint32_t s = (ms + 999u) / 1000u;
   if (s >= 3600u)
@@ -33,9 +36,10 @@ static void fmtCountdown(char* out, size_t cap, uint32_t ms) {
   else
     snprintf(out, cap, "%02u:%02u", (unsigned)(s / 60u), (unsigned)(s % 60));
 }
-
-// ---- models ----
-
+const char* ClockApplet::AlarmModel::label(int i) const {
+  return i == Time ? trClock(ClockTextId::ClockAlarmTimeLabel)
+                   : trClock(ClockTextId::ClockAlarmEnabledLabel);
+}
 const char* ClockApplet::AlarmModel::value(int i) const {
   if (i != Time) return nullptr;
   static char buf[12];
@@ -45,16 +49,13 @@ const char* ClockApplet::AlarmModel::value(int i) const {
   formatClock(buf, sizeof(buf), lt, app && app->timeFormat12h());
   return buf;
 }
-
 const char* ClockApplet::WorldModel::label(int i) const {
-  if (i >= clockService().cityCount()) return "Add city";
+  if (i >= clockService().cityCount()) return trClock(ClockTextId::ClockWorldAddCity);
   return worldCity(clockService().cityAt(i)).name;
 }
-
 uint16_t ClockApplet::WorldModel::icon(int i) const {
   return i >= clockService().cityCount() ? (uint16_t)Icon::Plus : 0;
 }
-
 const char* ClockApplet::WorldModel::value(int i) const {
   if (i >= clockService().cityCount() || !app) return nullptr;
   uint32_t epoch = app->epochSeconds();
@@ -63,7 +64,6 @@ const char* ClockApplet::WorldModel::value(int i) const {
   int16_t cityOff = worldCityOffsetNow(clockService().cityAt(i), epoch);
   LocalTime city = applyTz(epoch, cityOff);
   formatClock(buf, sizeof(buf), city, app->timeFormat12h());
-  // Mark cities already on tomorrow (+) or still on yesterday (-) vs. us.
   LocalTime here = applyTz(epoch, app->tzOffsetMinutes());
   if (city.day != here.day || city.month != here.month) {
     size_t n = strlen(buf);
@@ -74,7 +74,6 @@ const char* ClockApplet::WorldModel::value(int i) const {
   }
   return buf;
 }
-
 int ClockApplet::PickModel::count() const { return worldCityCount(); }
 const char* ClockApplet::PickModel::label(int i) const { return worldCity(i).name; }
 const char* ClockApplet::PickModel::value(int i) const {
@@ -82,9 +81,6 @@ const char* ClockApplet::PickModel::value(int i) const {
   formatOffset(buf, sizeof(buf), worldCity(i).baseOffsetMin);
   return buf;
 }
-
-// ---- applet ----
-
 void ClockApplet::onStart(AppletContext& ctx) {
   _host = ctx.host;
   _app = ctx.app;
@@ -92,24 +88,23 @@ void ClockApplet::onStart(AppletContext& ctx) {
   _worldModel.app = _app;
   timeSettings().begin(ctx);
   _tabs.clear();
-  _tabs.addTab("Stopwatch", (uint16_t)Icon::Clock);
-  _tabs.addTab("Timer", (uint16_t)Icon::Hourglass);
-  _tabs.addTab("Alarm", (uint16_t)Icon::AlarmClock);
-  _tabs.addTab("World", (uint16_t)Icon::Globe);
-  _tabs.addTab("Settings", (uint16_t)Icon::Settings);
+  _tabs.addTab(trClock(ClockTextId::ClockTabStopwatch), (uint16_t)Icon::Clock);
+  _tabs.addTab(trClock(ClockTextId::ClockTabTimer), (uint16_t)Icon::Hourglass);
+  _tabs.addTab(trClock(ClockTextId::ClockTabAlarm), (uint16_t)Icon::AlarmClock);
+  _tabs.addTab(trClock(ClockTextId::ClockTabWorld), (uint16_t)Icon::Globe);
+  _tabs.addTab(trClock(ClockTextId::ClockTabSettings), (uint16_t)Icon::Settings);
   _tab = 0;
   _editor.open = false;
   _pickingCity = false;
   _alarmList.setModel(&_alarmModel);
   _alarmList.setRowHeight(14);
-  _alarmList.resetSelection();   // singleton reuse: setModel skips reset on same-ptr rebind
+  _alarmList.resetSelection();
   _worldList.setModel(&_worldModel);
   _worldList.setRowHeight(14);
   _worldList.resetSelection();
   _pickList.setModel(&_pickModel);
   _pickList.setRowHeight(14);
 }
-
 int ClockApplet::onRender(Canvas& c) {
   _now = c.now();
   int w = c.width(), h = c.height();
@@ -117,13 +112,11 @@ int ClockApplet::onRender(Canvas& c) {
   _tabs.draw(c, 0, 0, w, BAR_H);
   int bodyY = BAR_H + 1;
   int bodyH = h - bodyY;
-
   if (settingsTab()) return timeSettings().renderBody(c, 0, bodyY, w, bodyH);
   if (_pickingCity) {
     _pickList.draw(c, 0, bodyY, w, bodyH);
     return _pickList.needsAnimation() ? ListMenu::TICK_MS : 500;
   }
-
   int next;
   switch (_tab) {
     case TAB_STOPWATCH: next = renderStopwatch(c, bodyY, bodyH); break;
@@ -134,7 +127,6 @@ int ClockApplet::onRender(Canvas& c) {
   if (_editor.open) { drawEditor(c); return 100; }
   return next;
 }
-
 int ClockApplet::renderStopwatch(Canvas& c, int y, int h) {
   ClockService& svc = clockService();
   uint32_t ms = svc.swElapsedMs(_now);
@@ -142,15 +134,13 @@ int ClockApplet::renderStopwatch(Canvas& c, int y, int h) {
   fmtStopwatch(buf, sizeof(buf), ms);
   int nh = c.fontHeight(fontNum());
   int capH = c.lineHeight(fontCaption());
-  int avail = h - capH - 2;               // body above the hint line
-  int ny = y + (avail - nh) / 2;          // vertically centred readout
+  int avail = h - capH - 2;
+  int ny = y + (avail - nh) / 2;
   int laps = svc.swLapCount();
   if (laps == 0) {
     c.drawText(fontNum(), c.width() / 2, ny, buf, DisplayDriver::LIGHT, TextAlign::Center);
   } else {
-    // Two columns: readout centred in the left column, lap list (newest first)
-    // down the right edge - fits several laps instead of two.
-    const int lapW = 40;                  // "8 88:88.8" in the caption tier
+    const int lapW = 40;
     int lx = c.width() - lapW;
     c.drawText(fontNum(), lx / 2, ny, buf, DisplayDriver::LIGHT, TextAlign::Center);
     int maxRows = (avail - 1) / capH;
@@ -163,14 +153,13 @@ int ClockApplet::renderStopwatch(Canvas& c, int y, int h) {
       ly += capH;
     }
   }
-
-  const char* hint = svc.swRunning() ? "Sel stop / up lap / hold reset"
-                    : ms ? "Sel resume / hold reset" : "Select to start";
+  const char* hint = svc.swRunning() ? trClock(ClockTextId::ClockStopwatchRunningHint)
+                    : ms ? trClock(ClockTextId::ClockStopwatchResumeHint)
+                         : trClock(ClockTextId::ClockStopwatchStartHint);
   c.drawText(fontCaption(), c.width() / 2, y + h - capH, hint,
              DisplayDriver::LIGHT, TextAlign::Center);
   return svc.swRunning() ? 50 : 60000;
 }
-
 int ClockApplet::renderTimer(Canvas& c, int y, int h) {
   ClockService& svc = clockService();
   char buf[16];
@@ -179,32 +168,29 @@ int ClockApplet::renderTimer(Canvas& c, int y, int h) {
   int capH = c.lineHeight(fontCaption());
   int avail = h - capH - 2;
   bool paused = svc.tmPaused();
-  int block = paused ? nh + 2 + capH : nh;   // centre readout (+ "Paused") as one block
+  int block = paused ? nh + 2 + capH : nh;
   int ny = y + (avail - block) / 2;
   c.drawText(fontNum(), c.width() / 2, ny, buf, DisplayDriver::LIGHT, TextAlign::Center);
   if (paused)
-    c.drawText(fontCaption(), c.width() / 2, ny + nh + 2, "Paused",
+    c.drawText(fontCaption(), c.width() / 2, ny + nh + 2, trClock(ClockTextId::ClockTimerPaused),
                DisplayDriver::LIGHT, TextAlign::Center);
-
-  const char* hint = svc.tmRunning() ? "Sel pause / hold reset"
-                    : paused ? "Sel resume / hold reset"
-                             : "Up/down set / sel start";
+  const char* hint = svc.tmRunning() ? trClock(ClockTextId::ClockTimerRunningHint)
+                    : paused ? trClock(ClockTextId::ClockTimerResumeHint)
+                             : trClock(ClockTextId::ClockTimerSetHint);
   c.drawText(fontCaption(), c.width() / 2, y + h - capH, hint,
              DisplayDriver::LIGHT, TextAlign::Center);
   return svc.tmRunning() ? 200 : 60000;
 }
-
 int ClockApplet::renderAlarm(Canvas& c, int y, int h) {
   int listH = 2 * _alarmList.rowHeight() + 2;
   _alarmList.draw(c, 0, y, c.width(), listH < h ? listH : h);
-
   char buf[28] = "";
   if (clockService().alarmEnabled() && _app) {
     int32_t mins = clockService().alarmMinutesAway(_app->epochSeconds(), _app->tzOffsetMinutes());
-    if (mins < 0) snprintf(buf, sizeof(buf), "Clock not set");
-    else if (mins == 0) snprintf(buf, sizeof(buf), "Rings now");
-    else if (mins >= 60) snprintf(buf, sizeof(buf), "Rings in %ldh %02ldm", (long)(mins / 60), (long)(mins % 60));
-    else snprintf(buf, sizeof(buf), "Rings in %ldm", (long)mins);
+    if (mins < 0) snprintf(buf, sizeof(buf), "%s", trClock(ClockTextId::ClockAlarmClockNotSet));
+    else if (mins == 0) snprintf(buf, sizeof(buf), "%s", trClock(ClockTextId::ClockAlarmRingsNow));
+    else if (mins >= 60) snprintf(buf, sizeof(buf), trClock(ClockTextId::ClockAlarmRingsInHours), (long)(mins / 60), (long)(mins % 60));
+    else snprintf(buf, sizeof(buf), trClock(ClockTextId::ClockAlarmRingsInMinutes), (long)mins);
   }
   if (buf[0])
     c.drawText(fontCaption(), c.width() / 2, y + h - c.lineHeight(fontCaption()), buf,
@@ -212,19 +198,17 @@ int ClockApplet::renderAlarm(Canvas& c, int y, int h) {
   return _alarmList.needsAnimation() ? ListMenu::TICK_MS
          : clockService().alarmEnabled() ? 15000 : 60000;
 }
-
 int ClockApplet::renderWorld(Canvas& c, int y, int h) {
   _worldList.draw(c, 0, y, c.width(), h);
   return _worldList.needsAnimation() ? ListMenu::TICK_MS : 1000;
 }
-
 void ClockApplet::openAlarmEditor() {
   int h24 = clockService().alarmHour();
   _editor = TimeEditor{};
-  _editor.title = "Alarm time";
+  _editor.title = trClock(ClockTextId::ClockAlarmTimeTitle);
   _editor.vals[1] = clockService().alarmMinute();
   _editor.maxs[1] = 60;
-  if (_app && _app->timeFormat12h()) {   // hour shown 1..12 + an AM/PM field
+  if (_app && _app->timeFormat12h()) {
     _editor.nFields = 3;
     _editor.vals[0] = h24 % 12 ? h24 % 12 : 12;
     _editor.mins[0] = 1;
@@ -239,11 +223,10 @@ void ClockApplet::openAlarmEditor() {
   }
   _editor.open = true;
 }
-
 void ClockApplet::openTimerEditor() {
   uint32_t s = clockService().tmDurationSecs();
   _editor = TimeEditor{};
-  _editor.title = "Timer";
+  _editor.title = trClock(ClockTextId::ClockTabTimer);
   _editor.nFields = 3;
   _editor.vals[0] = (int)(s / 3600);
   _editor.vals[1] = (int)((s / 60) % 60);
@@ -251,21 +234,19 @@ void ClockApplet::openTimerEditor() {
   _editor.maxs[0] = (int)(ClockService::TIMER_MAX_SECS / 3600) + 1;
   _editor.maxs[1] = 60;
   _editor.maxs[2] = 60;
-  _editor.sel = 1;   // minutes is the field people usually mean
+  _editor.sel = 1;
   _editor.forTimer = true;
   _editor.open = true;
 }
-
 void ClockApplet::drawEditor(Canvas& c) {
   Canvas box = drawModalChrome(c);
   int w = box.width();
   box.drawText(fontBody(), w / 2, 3, _editor.title, DisplayDriver::LIGHT, TextAlign::Center);
-
   int nh = c.fontHeight(fontNum());
   int ty = 3 + c.lineHeight(fontBody()) + 4;
   int colonW = box.textWidth(fontNum(), ":");
   int digitW = box.textWidth(fontNum(), "00");
-  int ampmW = box.textWidth(fontSubtitle(), "PM");   // fontNum has no letters
+  int ampmW = box.textWidth(fontSubtitle(), "PM");
   int total = 0;
   for (int i = 0; i < _editor.nFields; i++) {
     total += i == _editor.ampmField ? ampmW : digitW;
@@ -285,7 +266,7 @@ void ClockApplet::drawEditor(Canvas& c) {
       box.drawText(fontNum(), x, ty, v, DisplayDriver::LIGHT);
     }
     if (i == _editor.sel)
-      box.fillRect(x, ty + nh + 1, fw, 2, DisplayDriver::LIGHT);   // active field
+      box.fillRect(x, ty + nh + 1, fw, 2, DisplayDriver::LIGHT);
     x += fw;
     if (i < _editor.nFields - 1) {
       if (i + 1 == _editor.ampmField) x += 6;
@@ -296,9 +277,8 @@ void ClockApplet::drawEditor(Canvas& c) {
     }
   }
   box.drawText(fontCaption(), w / 2, box.height() - c.lineHeight(fontCaption()) - 2,
-               "Select to save", DisplayDriver::LIGHT, TextAlign::Center);
+               tr(TextId::TimeSelectToSave), DisplayDriver::LIGHT, TextAlign::Center);
 }
-
 bool ClockApplet::inputEditor(InputEvent ev) {
   TimeEditor& e = _editor;
   if (ev == InputEvent::NavLeft || ev == InputEvent::NavRight) {
@@ -315,31 +295,26 @@ bool ClockApplet::inputEditor(InputEvent ev) {
     } else {
       int h24 = e.ampmField >= 0 ? (e.vals[0] % 12) + (e.vals[e.ampmField] ? 12 : 0)
                                  : e.vals[0];
-      // Saving a time is arming it: enable in the same step.
       clockService().setAlarm((uint8_t)h24, (uint8_t)e.vals[1], true,
                               _app ? _app->epochSeconds() : 0,
                               _app ? _app->tzOffsetMinutes() : 0);
-      if (_host) _host->postToast("Alarm set");
+      if (_host) _host->postToast(trClock(ClockTextId::ClockAlarmSet));
     }
     e.open = false;
   } else if (ev == InputEvent::Back || ev == InputEvent::Cancel) {
     e.open = false;
   }
-  return true;   // swallow everything while modal
+  return true;
 }
-
 bool ClockApplet::onInput(InputEvent ev) {
-  // Settings tab: delegate entirely to the shared panel.
   if (settingsTab()) {
     if (timeSettings().modalActive()) return timeSettings().onInput(ev);
     if (_tabs.onInput(ev)) { _tab = _tabs.selected(); return true; }
     if (timeSettings().onInput(ev)) return true;
-    return false;   // Back bubbles
+    return false;
   }
-
   if (_editor.open) return inputEditor(ev);
   if (_pickingCity) return inputWorld(ev);
-
   if (_tabs.onInput(ev)) {
     _tab = _tabs.selected();
     return true;
@@ -351,7 +326,6 @@ bool ClockApplet::onInput(InputEvent ev) {
     default:            return inputWorld(ev);
   }
 }
-
 bool ClockApplet::inputStopwatch(InputEvent ev) {
   ClockService& svc = clockService();
   if (ev == InputEvent::Select) { svc.swToggle(_now); return true; }
@@ -359,7 +333,6 @@ bool ClockApplet::inputStopwatch(InputEvent ev) {
   if (ev == InputEvent::NavUp && svc.swRunning()) { svc.swLap(_now); return true; }
   return false;
 }
-
 bool ClockApplet::inputTimer(InputEvent ev) {
   ClockService& svc = clockService();
   if (ev == InputEvent::Select) { svc.tmToggle(_now); return true; }
@@ -370,7 +343,6 @@ bool ClockApplet::inputTimer(InputEvent ev) {
   }
   return false;
 }
-
 bool ClockApplet::inputAlarm(InputEvent ev) {
   ClockService& svc = clockService();
   if (_alarmList.onInput(ev)) return true;
@@ -386,25 +358,23 @@ bool ClockApplet::inputAlarm(InputEvent ev) {
   }
   return false;
 }
-
 bool ClockApplet::inputWorld(InputEvent ev) {
   ClockService& svc = clockService();
   if (_pickingCity) {
     if (_pickList.onInput(ev)) return true;
     if (ev == InputEvent::Select) {
       if (!svc.addCity((uint8_t)_pickList.selected()) && _host)
-        _host->postToast("Already added");
+        _host->postToast(trClock(ClockTextId::ClockWorldAlreadyAdded));
       _pickingCity = false;
       return true;
     }
     if (ev == InputEvent::Back || ev == InputEvent::Cancel) { _pickingCity = false; return true; }
-    return true;   // swallow everything while picking
+    return true;
   }
-
   if (_worldList.onInput(ev)) return true;
   int sel = _worldList.selected();
   if (ev == InputEvent::Select) {
-    if (sel >= svc.cityCount()) {   // "Add city" row
+    if (sel >= svc.cityCount()) {
       _pickList.resetSelection();
       _pickingCity = true;
     }
@@ -414,18 +384,15 @@ bool ClockApplet::inputWorld(InputEvent ev) {
     svc.removeCity(sel);
     if (_worldList.selected() >= _worldModel.count())
       _worldList.setSelected(_worldModel.count() - 1);
-    if (_host) _host->postToast("City removed");
+    if (_host) _host->postToast(trClock(ClockTextId::ClockWorldCityRemoved));
     return true;
   }
   return false;
 }
-
 ClockApplet& clockApplet() {
   static ClockApplet a;
   return a;
 }
-
 MISHMESH_REGISTER_APPLET_ICON(&clockApplet(), Placement::AppMenu, "Clock", 5,
                               (uint16_t)Icon::Clock);
-
-}  // namespace mishmesh
+}
