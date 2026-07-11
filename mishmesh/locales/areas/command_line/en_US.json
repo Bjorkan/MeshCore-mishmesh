@@ -1,7 +1,0 @@
-{
-  "command_line.send_failed": "[send failed]",
-  "command_line.no_response": "[no response]",
-  "command_line.waiting_reply": "Waiting reply...",
-  "command_line.select_command": "Select: command",
-  "command_line.command": "Command"
-}
