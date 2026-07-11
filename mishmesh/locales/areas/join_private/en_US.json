@@ -1,0 +1,10 @@
+{
+  "join_private.name": "Name",
+  "join_private.key": "Key",
+  "join_private.join": "Join",
+  "join_private.none": "(none)",
+  "join_private.title": "Join private",
+  "join_private.key_32_hex": "Key (32 hex)",
+  "join_private.name_required": "Name required",
+  "join_private.key_32_hex_chars": "Key: 32 hex chars"
+}

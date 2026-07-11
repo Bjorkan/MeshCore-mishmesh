@@ -1,0 +1,10 @@
+{
+  "join_private.name": "Namn",
+  "join_private.key": "Nyckel",
+  "join_private.join": "Gå med",
+  "join_private.none": "(ingen)",
+  "join_private.title": "Gå med i privat kanal",
+  "join_private.key_32_hex": "Nyckel (32 hex)",
+  "join_private.name_required": "Namn krävs",
+  "join_private.key_32_hex_chars": "Nyckel: 32 hextecken"
+}
