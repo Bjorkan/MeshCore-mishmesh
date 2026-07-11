@@ -1,0 +1,11 @@
+{
+  "repeater_settings_panel.save": "Save",
+  "repeater_settings_panel.settings": "Settings",
+  "repeater_settings_panel.on": "On",
+  "repeater_settings_panel.off": "Off",
+  "repeater_settings_panel.loading": "Loading...",
+  "repeater_settings_panel.saving": "Saving %d/%d...",
+  "repeater_settings_panel.save_failed": "Save failed: %s",
+  "repeater_settings_panel.select_save": "Select Save to apply",
+  "repeater_settings_panel.discard_changes": "Discard changes?"
+}

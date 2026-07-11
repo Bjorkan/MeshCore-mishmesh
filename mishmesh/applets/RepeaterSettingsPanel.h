@@ -41,7 +41,7 @@ public:
 
   // ListModel (form-mode field rows + Save button at _n)
   int count() const override { return hasEditable() ? _n + 1 : _n; }
-  const char* label(int i) const override { return (i >= 0 && i < _n) ? _defs[i].label : "Save"; }
+  const char* label(int i) const override;
   const char* value(int i) const override { return (i >= 0 && i < _n) ? displayValueForTest(i) : nullptr; }
   bool isButton(int i) const override { return hasEditable() && i == _n; }
 

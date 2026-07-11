@@ -6,6 +6,8 @@
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/ContactsService.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/RepeaterSettingsPanelLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <mishmesh/widgets/Modal.h>
 #include <string.h>
@@ -14,15 +16,30 @@
 
 namespace mishmesh {
 
+static const char* trRepeaterSettingsPanel(RepeaterSettingsPanelTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedRepeaterSettingsPanelLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedRepeaterSettingsPanelLocaleString(0, id);
+  return fallback ? fallback : "";
+}
+
 // The single shared staged store, only one panel is open at a time.
 static char s_staged[RepeaterSettingsPanel::MAX_FIELDS][RepeaterSettingsPanel::FIELD_CAP];
 static bool s_dirty[RepeaterSettingsPanel::MAX_FIELDS];
 static bool s_fetched[RepeaterSettingsPanel::MAX_FIELDS];
 
+const char* RepeaterSettingsPanel::label(int i) const {
+  return (i >= 0 && i < _n) ? _defs[i].label
+                            : trRepeaterSettingsPanel(RepeaterSettingsPanelTextId::RepeaterSettingsPanelSave);
+}
+
 const char* RepeaterSettingsPanel::displayValueForTest(int i) const {
   if (i < 0 || i >= _n) return "";
   if (_defs[i].kind == SettingFieldDef::Toggle)
-    return strcmp(_engine.value(i), "on") == 0 ? "On" : "Off";
+    return strcmp(_engine.value(i), "on") == 0
+        ? trRepeaterSettingsPanel(RepeaterSettingsPanelTextId::RepeaterSettingsPanelOn)
+        : trRepeaterSettingsPanel(RepeaterSettingsPanelTextId::RepeaterSettingsPanelOff);
   const char* v = _engine.value(i);
   if (_defs[i].longValue) {
     strncpy(_truncBuf, v, 6); _truncBuf[6] = 0; strcat(_truncBuf, "...");
@@ -45,7 +62,8 @@ void RepeaterSettingsPanel::setTarget(const uint8_t* pubKey, const char* name) {
 void RepeaterSettingsPanel::setModel(const SettingFieldDef* defs, int n, const char* title) {
   _defs = defs;
   _n = n < MAX_FIELDS ? n : MAX_FIELDS;
-  _title = title ? title : "Settings";
+  _title = title ? title
+                 : trRepeaterSettingsPanel(RepeaterSettingsPanelTextId::RepeaterSettingsPanelSettings);
 }
 
 void RepeaterSettingsPanel::onStart(AppletContext& ctx) {
@@ -140,7 +158,9 @@ int RepeaterSettingsPanel::onRender(Canvas& c) {
 
   // Loading screen: while fetching, show a centered "Loading..." and skip the form.
   if (ep == RemoteSettingsEngine::Phase::Fetching) {
-    c.drawTextCentered(body, 0, top, w, bottom - top, "Loading...", DisplayDriver::LIGHT);
+    c.drawTextCentered(body, 0, top, w, bottom - top,
+                       trRepeaterSettingsPanel(RepeaterSettingsPanelTextId::RepeaterSettingsPanelLoading),
+                       DisplayDriver::LIGHT);
     return 150;
   }
 
@@ -168,12 +188,16 @@ int RepeaterSettingsPanel::onRender(Canvas& c) {
   const char* status = "";
   char sbuf[40];
   if (ep == RemoteSettingsEngine::Phase::Saving) {
-    snprintf(sbuf, sizeof(sbuf), "Saving %d/%d...", _engine.activeIndex() + 1, _n); status = sbuf;
+    snprintf(sbuf, sizeof(sbuf),
+             trRepeaterSettingsPanel(RepeaterSettingsPanelTextId::RepeaterSettingsPanelSaving),
+             _engine.activeIndex() + 1, _n); status = sbuf;
   } else if (ep == RemoteSettingsEngine::Phase::Error) {
     int ei = _engine.errorIndex();
-    snprintf(sbuf, sizeof(sbuf), "Save failed: %s", (ei >= 0 && ei < _n) ? _defs[ei].label : "?"); status = sbuf;
+    snprintf(sbuf, sizeof(sbuf),
+             trRepeaterSettingsPanel(RepeaterSettingsPanelTextId::RepeaterSettingsPanelSaveFailed),
+             (ei >= 0 && ei < _n) ? _defs[ei].label : "?"); status = sbuf;
   } else if (hasEditable() && _engine.anyDirty()) {
-    status = "Select Save to apply";
+    status = trRepeaterSettingsPanel(RepeaterSettingsPanelTextId::RepeaterSettingsPanelSelectSave);
   }
   c.drawText(cap, 2, bottom, status, DisplayDriver::LIGHT, TextAlign::Left);
 
@@ -240,7 +264,8 @@ bool RepeaterSettingsPanel::onInput(InputEvent ev) {
   }
 
   if (ev == InputEvent::Back && _engine.anyDirty()) {
-    _confirm.configure("Discard changes?");
+    _confirm.configure(trRepeaterSettingsPanel(
+        RepeaterSettingsPanelTextId::RepeaterSettingsPanelDiscardChanges));
     _phase = Phase::Confirm;
     return true;   // swallow Back; the confirm decides
   }
