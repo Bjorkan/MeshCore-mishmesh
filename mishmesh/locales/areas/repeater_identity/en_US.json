@@ -1,0 +1,13 @@
+{
+  "repeater_identity.generate_random": "Generate random",
+  "repeater_identity.enter_seed": "Enter seed",
+  "repeater_identity.bad_seed": "Bad seed (need 64 hex)",
+  "repeater_identity.select_to_apply": "Select to apply",
+  "repeater_identity.keygen_failed": "Keygen failed",
+  "repeater_identity.apply_failed": "Apply failed",
+  "repeater_identity.identity": "Identity",
+  "repeater_identity.working": "Working...",
+  "repeater_identity.rebooting": "Rebooting...",
+  "repeater_identity.confirm_replace": "Replace repeater key + reboot? You must re-add it.",
+  "repeater_identity.seed_title": "Seed (64 hex)"
+}

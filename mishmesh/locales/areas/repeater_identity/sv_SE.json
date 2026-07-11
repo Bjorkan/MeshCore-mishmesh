@@ -1,0 +1,13 @@
+{
+  "repeater_identity.generate_random": "Generera slumpmässigt",
+  "repeater_identity.enter_seed": "Ange seed",
+  "repeater_identity.bad_seed": "Ogiltig seed (kräver 64 hex)",
+  "repeater_identity.select_to_apply": "Select för att tillämpa",
+  "repeater_identity.keygen_failed": "Nyckelgenerering misslyckades",
+  "repeater_identity.apply_failed": "Tillämpningen misslyckades",
+  "repeater_identity.identity": "Identitet",
+  "repeater_identity.working": "Arbetar...",
+  "repeater_identity.rebooting": "Startar om...",
+  "repeater_identity.confirm_replace": "Ersätt repeaternyckeln och starta om? Du måste lägga till den igen.",
+  "repeater_identity.seed_title": "Seed (64 hex)"
+}
