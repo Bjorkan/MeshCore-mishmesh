@@ -1,10 +1,20 @@
 // mishmesh/applets/MessagePathApplet.cpp
 #include "MessagePathApplet.h"
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/MessagePathLocaleStrings.h>
 #include <mishmesh/widgets/ListMenu.h>   // TICK_MS
 #include <cstdio>
 
 namespace mishmesh {
+
+static const char* trMessagePath(MessagePathTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedMessagePathLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedMessagePathLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 void MessagePathApplet::onStart(AppletContext& ctx) {
   _svc = ctx.messages;
@@ -30,13 +40,19 @@ void MessagePathApplet::rebuild() {
   if (!_svc->getMessage(_key, _idx, m)) return;
 
   if (m.kind == KIND_OUT_CHAN) {
-    if (m.heardCount == 0)      snprintf(_title, sizeof(_title), "Heard repeats");
-    else if (m.heardCount == 1) snprintf(_title, sizeof(_title), "Heard 1 time");
-    else                        snprintf(_title, sizeof(_title), "Heard %u times", (unsigned)m.heardCount);
+    if (m.heardCount == 0)
+      snprintf(_title, sizeof(_title), "%s", trMessagePath(MessagePathTextId::MessagePathHeardRepeats));
+    else if (m.heardCount == 1)
+      snprintf(_title, sizeof(_title), "%s", trMessagePath(MessagePathTextId::MessagePathHeardOnce));
+    else
+      snprintf(_title, sizeof(_title), trMessagePath(MessagePathTextId::MessagePathHeardTimes),
+               (unsigned)m.heardCount);
     _bar.setTitle(_title);
     int rc = _svc->repeatCount(_key, _idx);
     if (rc == 0) {
-      _text.addLine(m.heardCount ? "Details not available" : "Not heard yet");
+      _text.addLine(m.heardCount
+          ? trMessagePath(MessagePathTextId::MessagePathDetailsUnavailable)
+          : trMessagePath(MessagePathTextId::MessagePathNotHeardYet));
       return;
     }
     for (int r = 0; r < rc; r++) {
@@ -50,22 +66,25 @@ void MessagePathApplet::rebuild() {
         char lbl[34]; hopLabel(rv.path[rv.pathLen - 1], lbl, sizeof(lbl));
         _text.addf("  %s", lbl);
       } else {
-        _text.addLine("  (direct)");
+        _text.addLine(trMessagePath(MessagePathTextId::MessagePathDirectParenthesized));
       }
       _rows++;
     }
   } else {
     // inbound (or outbound DM with no path): the flood relay chain
-    if (m.pathLen == 0)   snprintf(_title, sizeof(_title), "Direct");
-    else if (m.hops == 1) snprintf(_title, sizeof(_title), "Path: 1 hop");
-    else                  snprintf(_title, sizeof(_title), "Path: %u hops", (unsigned)m.hops);
+    if (m.pathLen == 0)
+      snprintf(_title, sizeof(_title), "%s", trMessagePath(MessagePathTextId::MessagePathDirect));
+    else if (m.hops == 1)
+      snprintf(_title, sizeof(_title), "%s", trMessagePath(MessagePathTextId::MessagePathOneHop));
+    else
+      snprintf(_title, sizeof(_title), trMessagePath(MessagePathTextId::MessagePathHops), (unsigned)m.hops);
     _bar.setTitle(_title);
     for (int h = 0; h < m.pathLen; h++) {
       char lbl[20]; hopLabel(m.path[h], lbl, sizeof(lbl));
       _text.addf("%d  %s", h + 1, lbl);
       _rows++;
     }
-    if (m.pathLen == 0) _text.addLine("Direct (no path)");
+    if (m.pathLen == 0) _text.addLine(trMessagePath(MessagePathTextId::MessagePathNoPath));
   }
 }
 

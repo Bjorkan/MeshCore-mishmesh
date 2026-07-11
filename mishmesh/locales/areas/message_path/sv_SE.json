@@ -1,0 +1,12 @@
+{
+  "message_path.heard_repeats": "Hörda repetitioner",
+  "message_path.heard_once": "Hörd 1 gång",
+  "message_path.heard_times": "Hörd %u gånger",
+  "message_path.details_unavailable": "Detaljer saknas",
+  "message_path.not_heard_yet": "Inte hörd än",
+  "message_path.direct_parenthesized": "  (direkt)",
+  "message_path.direct": "Direkt",
+  "message_path.one_hop": "Rutt: 1 hopp",
+  "message_path.hops": "Rutt: %u hopp",
+  "message_path.no_path": "Direkt (ingen rutt)"
+}
