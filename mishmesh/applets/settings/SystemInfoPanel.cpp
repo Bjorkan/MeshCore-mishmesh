@@ -86,6 +86,8 @@ void SystemInfoPanel::begin(AppletContext& ctx) {
   _list.setModel(&_actions);
   _list.resetSelection();
   _list.setDrawSelection(false);   // stats region has focus first
+  // The actions ride at the end of the scrolled content, not pinned to the
+  // viewport: they scroll into view after the last stat line.
   _stats.setFooter(&_list, ACTIONS_H, /*divider=*/true);
 }
 
@@ -95,7 +97,7 @@ int SystemInfoPanel::renderBody(Canvas& c, int x, int y, int w, int h) {
   else if (now - _lastBuilt >= REBUILD_MS) rebuild(now, true);
 
   _list.setDrawSelection(_focus == Focus::Actions);
-  _stats.draw(c, x, y, w, h);
+  _stats.draw(c, x, y, w, h);   // actions ride as a scrolling footer inside the stats view
 
   if (_confirming) { _confirm.draw(c, 0, 0, c.width(), c.height()); return 100; }
 
@@ -105,10 +107,12 @@ int SystemInfoPanel::renderBody(Canvas& c, int x, int y, int w, int h) {
 
 void SystemInfoPanel::openConfirm(int row) {
   _pendingRow = row;
+  // Kept short: the confirm box holds ~2 body lines, so long copy overflows behind
+  // the buttons. The menu row already names which reset this is.
   _confirm.configure(row == 0
     ? trSystemInfo(SystemInfoTextId::SystemInfoConfirmKeepIdentity)
     : trSystemInfo(SystemInfoTextId::SystemInfoConfirmFullWipe),
-    /*defaultSel=*/0);
+    /*defaultSel=*/0);   // open on Cancel: irreversible wipe, don't confirm on a stray Select
   _confirming = true;
 }
 
@@ -121,7 +125,7 @@ bool SystemInfoPanel::onInput(InputEvent ev) {
         _confirming = false; _pendingRow = -1;
       }
     }
-    return true;
+    return true;   // modal swallows all input while open
   }
 
   if (_focus == Focus::Stats) {
@@ -130,16 +134,19 @@ bool SystemInfoPanel::onInput(InputEvent ev) {
       _list.setSelected(0);
       return true;
     }
-    return _stats.onInput(ev);
+    return _stats.onInput(ev);   // scroll; false (Back / NavUp at top) bubbles
   }
 
+  // Focus::Actions
   if (ev == InputEvent::NavUp && _list.selected() == 0) {
     _focus = Focus::Stats;
     return true;
   }
-  if (_list.onInput(ev)) return true;
+  if (_list.onInput(ev)) return true;   // move between the two rows
+  // Select must be checked after _list.onInput: ListMenu leaves Select unconsumed
+  // (only handles Nav), so it falls through here to open the confirm.
   if (ev == InputEvent::Select) { openConfirm(_list.selected()); return true; }
-  return false;
+  return false;   // Back bubbles -> host pops the panel
 }
 
 SystemInfoPanel& systemInfoSettings() {
