@@ -6,8 +6,10 @@
 #include <mishmesh/applets/SetPathApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/ContactsService.h>
+#include <mishmesh/core/ContactDetailLocaleStrings.h>
 #include <mishmesh/core/ContactFormat.h>
 #include <mishmesh/core/Geo.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/core/MessageStore.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
@@ -18,10 +20,28 @@ namespace mishmesh {
 static const uint32_t PING_TIMEOUT_MS = 12000;
 static const uint32_t TELEM_TIMEOUT_MS = 12000;
 
+static const char* trContactDetail(ContactDetailTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedContactDetailLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedContactDetailLocaleString(0, id);
+  return fallback ? fallback : "";
+}
+
 // Favourite's label is dynamic (see label()); this slot is a placeholder.
-static const char* ACTION_LABELS[ContactDetailApplet::ACTION_KINDS] = {
-  "View details", "", "Telemetry", "Ping (0 hop)", "Reset path", "Clear conversation", "Delete contact",
-  "Send message", "Rename", "Permissions", "Set path", "Manage",
+static const ContactDetailTextId ACTION_LABELS[ContactDetailApplet::ACTION_KINDS] = {
+  ContactDetailTextId::ContactDetailViewDetails,
+  ContactDetailTextId::Count,
+  ContactDetailTextId::ContactDetailTelemetry,
+  ContactDetailTextId::ContactDetailPingZeroHop,
+  ContactDetailTextId::ContactDetailResetPath,
+  ContactDetailTextId::ContactDetailClearConversation,
+  ContactDetailTextId::ContactDetailDeleteContact,
+  ContactDetailTextId::ContactDetailSendMessage,
+  ContactDetailTextId::ContactDetailRename,
+  ContactDetailTextId::ContactDetailPermissions,
+  ContactDetailTextId::ContactDetailSetPath,
+  ContactDetailTextId::ContactDetailManage,
 };
 
 static const char* typeName(uint8_t t) { return contactTypeName(t); }
@@ -38,7 +58,7 @@ static int hexNibble(char ch) {
 static void hashSizeLabel(int v, char* out, uint16_t cap) {
   int maxHops = PATH_MAX_BYTES / v;
   if (maxHops > 63) maxHops = 63;
-  snprintf(out, cap, "%d-byte (%d hops)", v, maxHops);
+  snprintf(out, cap, trContactDetail(ContactDetailTextId::ContactDetailHashSize), v, maxHops);
 }
 
 // Count comma/space separated tokens (no validation) for the field summary.
@@ -56,8 +76,9 @@ static int countHops(const char* text) {
 // Text field display: raw hex -> "flood" / "N hop(s)" (keypad still edits the hex).
 static void pathSummary(const char* buf, char* out, uint16_t cap) {
   int n = countHops(buf);
-  if (n == 0) { snprintf(out, cap, "flood"); return; }
-  snprintf(out, cap, "%d hop%s", n, n == 1 ? "" : "s");
+  if (n == 0) { snprintf(out, cap, "%s", trContactDetail(ContactDetailTextId::ContactDetailFlood)); return; }
+  if (n == 1) { snprintf(out, cap, "%s", trContactDetail(ContactDetailTextId::ContactDetailOneHop)); return; }
+  snprintf(out, cap, trContactDetail(ContactDetailTextId::ContactDetailHops), n);
 }
 
 ContactDetailApplet::ContactDetailApplet()
@@ -72,8 +93,11 @@ ContactDetailApplet::ContactDetailApplet()
 
 const char* ContactDetailApplet::label(int i) const {
   if (i < 0 || i >= _actionCount) return "";
-  if (_actions[i] == Favourite) return _favourite ? "Remove from favorites" : "Add to favorites";
-  return ACTION_LABELS[_actions[i]];
+  if (_actions[i] == Favourite)
+    return _favourite
+        ? trContactDetail(ContactDetailTextId::ContactDetailRemoveFavorite)
+        : trContactDetail(ContactDetailTextId::ContactDetailAddFavorite);
+  return trContactDetail(ACTION_LABELS[_actions[i]]);
 }
 
 void ContactDetailApplet::setTarget(const uint8_t* pubKey) {
@@ -156,13 +180,18 @@ bool ContactDetailApplet::submitSetPath(void* ctx) {
   if (!a->_svc) return true;
   uint8_t path[PATH_MAX_BYTES];
   int hops = ContactDetailApplet::parseHexPath(a->_pathBuf, (uint8_t)a->_hashSize, path, PATH_MAX_BYTES);
-  if (hops < 0) { if (a->_host) a->_host->postToast("Invalid path"); return false; }
+  if (hops < 0) {
+    if (a->_host) a->_host->postToast(trContactDetail(ContactDetailTextId::ContactDetailInvalidPath));
+    return false;
+  }
   uint8_t encoded = (uint8_t)(((a->_hashSize - 1) << 6) | (hops & 63));
   if (a->_svc->setPath(a->_pubkey, path, encoded)) {
-    if (a->_host) a->_host->postToast(hops ? "Path saved" : "Path cleared");
+    if (a->_host) a->_host->postToast(hops
+        ? trContactDetail(ContactDetailTextId::ContactDetailPathSaved)
+        : trContactDetail(ContactDetailTextId::ContactDetailPathCleared));
     return true;
   }
-  if (a->_host) a->_host->postToast("Failed");
+  if (a->_host) a->_host->postToast(trContactDetail(ContactDetailTextId::ContactDetailFailed));
   return false;
 }
 
@@ -220,13 +249,13 @@ void ContactDetailApplet::buildInfo() {
 
   // The view-details panel.
   _details.clear();
-  _details.addf("Type: %s", typeName(_type));
-  if (_hasPath) _details.addf("Path: Direct (%u hop)", _hops);
-  else          _details.addLine("Path: Flood");
-  if (_distKm >= 0) _details.addf("Distance: %.2f km", (double)_distKm);
-  if (age[0])       _details.addf("Last heard: %s ago", age);
-  if (_hasLoc)      _details.addf("GPS: %.5f, %.5f", _gpsLat / 1e6, _gpsLon / 1e6);
-  _details.addLine("Public key:");
+  _details.addf(trContactDetail(ContactDetailTextId::ContactDetailType), typeName(_type));
+  if (_hasPath) _details.addf(trContactDetail(ContactDetailTextId::ContactDetailPathDirect), _hops);
+  else          _details.addLine(trContactDetail(ContactDetailTextId::ContactDetailPathFlood));
+  if (_distKm >= 0) _details.addf(trContactDetail(ContactDetailTextId::ContactDetailDistance), (double)_distKm);
+  if (age[0])       _details.addf(trContactDetail(ContactDetailTextId::ContactDetailLastHeard), age);
+  if (_hasLoc)      _details.addf(trContactDetail(ContactDetailTextId::ContactDetailGps), _gpsLat / 1e6, _gpsLon / 1e6);
+  _details.addLine(trContactDetail(ContactDetailTextId::ContactDetailPublicKey));
   for (int r = 0; r < PUBKEY_LEN; r += 8) {     // 8 bytes / 16 hex chars per line
     char hex[20];
     for (int j = 0; j < 8; j++) snprintf(hex + j * 2, 3, "%02X", _fullKey[r + j]);
@@ -302,11 +331,17 @@ bool ContactDetailApplet::onInput(InputEvent ev) {
       ConfirmResult r = _confirm.result();
       if (r != ConfirmResult::None) {
         if (r == ConfirmResult::Confirmed && _svc) {
-          if (_pendingAction == ClearConvo) { _svc->clearConversation(_pubkey); if (_host) _host->postToast("Cleared"); }
+          if (_pendingAction == ClearConvo) {
+            _svc->clearConversation(_pubkey);
+            if (_host) _host->postToast(trContactDetail(ContactDetailTextId::ContactDetailCleared));
+          }
           else if (_pendingAction == Delete) {
             _svc->deleteContact(_pubkey);
             _confirming = false; _pendingAction = -1;
-            if (_host) { _host->postToast("Contact deleted"); _host->pop(); }
+            if (_host) {
+              _host->postToast(trContactDetail(ContactDetailTextId::ContactDetailDeleted));
+              _host->pop();
+            }
             return true;
           }
         }
@@ -361,7 +396,8 @@ bool ContactDetailApplet::onInput(InputEvent ev) {
       case Rename:
         strncpy(_renameBuf, _name, sizeof(_renameBuf) - 1);   // seed with the current name
         _renameBuf[sizeof(_renameBuf) - 1] = 0;
-        keypadApplet().configure(_renameBuf, sizeof(_renameBuf) - 1, "Rename",
+        keypadApplet().configure(_renameBuf, sizeof(_renameBuf) - 1,
+                                 trContactDetail(ContactDetailTextId::ContactDetailRename),
                                  &ContactDetailApplet::onRenameDone, this);
         if (_host) _host->push(&keypadApplet());
         return true;
@@ -370,7 +406,9 @@ bool ContactDetailApplet::onInput(InputEvent ev) {
         if (_svc->setFavourite(_pubkey, !_favourite)) {
           _favourite = !_favourite;
           _card.setFavourite(_favourite);     // label + star update on next render
-          if (_host) _host->postToast(_favourite ? "Added to favorites" : "Removed from favorites");
+          if (_host) _host->postToast(_favourite
+              ? trContactDetail(ContactDetailTextId::ContactDetailAddedFavorite)
+              : trContactDetail(ContactDetailTextId::ContactDetailRemovedFavorite));
         }
         return true;
       case Telemetry:
@@ -394,14 +432,17 @@ bool ContactDetailApplet::onInput(InputEvent ev) {
       case SetPath:
         openSetPath();
         return true;
-      case ResetPath: _svc->resetPath(_pubkey); if (_host) _host->postToast("Path reset"); return true;
+      case ResetPath:
+        _svc->resetPath(_pubkey);
+        if (_host) _host->postToast(trContactDetail(ContactDetailTextId::ContactDetailPathReset));
+        return true;
       case ClearConvo:
         _pendingAction = ClearConvo;
-        _confirm.configure("Clear conversation?");
+        _confirm.configure(trContactDetail(ContactDetailTextId::ContactDetailConfirmClear));
         _confirming = true; return true;
       case Delete:
         _pendingAction = Delete;
-        _confirm.configure("Delete this contact?");
+        _confirm.configure(trContactDetail(ContactDetailTextId::ContactDetailConfirmDelete));
         _confirming = true; return true;
     }
   }
