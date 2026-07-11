@@ -1,0 +1,22 @@
+{
+  "message_thread.reply": "Svara",
+  "message_thread.resend": "Skicka igen",
+  "message_thread.delete": "Ta bort",
+  "message_thread.heard_repeats": "Hörda upprepningar",
+  "message_thread.view_path": "Visa rutt",
+  "message_thread.heard": "Hörd %u",
+  "message_thread.sent": "Skickat",
+  "message_thread.delivered": "Levererat %.1fs",
+  "message_thread.failed": "Misslyckades",
+  "message_thread.retrying": "Försöker igen %u/%u",
+  "message_thread.settings": "Inställningar",
+  "message_thread.write_a_message": "Skriv ett meddelande",
+  "message_thread.quick_replies": "Snabbsvar",
+  "message_thread.no_messages": "Inga meddelanden",
+  "message_thread.resending": "Skickar igen",
+  "message_thread.resend_failed": "Kunde inte skicka igen",
+  "message_thread.no_quick_replies": "Inga snabbsvar\nLägg till i Inställningar",
+  "message_thread.message": "Meddelande",
+  "message_thread.send_failed": "Kunde inte skicka",
+  "message_thread.region": "Region"
+}

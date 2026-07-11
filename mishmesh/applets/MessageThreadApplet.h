@@ -109,14 +109,7 @@ private:
       return (i >= 0 && i < n) ? seq[i] : Delete;
     }
     int count() const override { return 1 + (canResend ? 1 : 0) + 1 + (hasPath ? 1 : 0); }
-    const char* label(int i) const override {
-      switch (actionAt(i)) {
-        case Reply:  return "Reply";
-        case Resend: return "Resend";
-        case Delete: return "Delete";
-        default:     return repeats ? "Heard Repeats" : "View Path";
-      }
-    }
+    const char* label(int i) const override;
   } _msgMenu;
   struct QuickReplyModel : ListModel {
     int count() const override { return quickReplyStore().count(); }

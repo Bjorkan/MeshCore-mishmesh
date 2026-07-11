@@ -1,0 +1,22 @@
+{
+  "message_thread.reply": "Reply",
+  "message_thread.resend": "Resend",
+  "message_thread.delete": "Delete",
+  "message_thread.heard_repeats": "Heard Repeats",
+  "message_thread.view_path": "View Path",
+  "message_thread.heard": "Heard %u",
+  "message_thread.sent": "Sent",
+  "message_thread.delivered": "Delivered %.1fs",
+  "message_thread.failed": "Failed",
+  "message_thread.retrying": "Retrying %u/%u",
+  "message_thread.settings": "Settings",
+  "message_thread.write_a_message": "Write a message",
+  "message_thread.quick_replies": "Quick replies",
+  "message_thread.no_messages": "No messages",
+  "message_thread.resending": "Resending",
+  "message_thread.resend_failed": "Resend failed",
+  "message_thread.no_quick_replies": "No quick replies\nAdd in Settings",
+  "message_thread.message": "Message",
+  "message_thread.send_failed": "Send failed",
+  "message_thread.region": "Region"
+}
