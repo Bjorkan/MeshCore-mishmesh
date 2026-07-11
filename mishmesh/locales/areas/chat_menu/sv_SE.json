@@ -1,0 +1,17 @@
+{
+  "chat_menu.region": "Region",
+  "chat_menu.notifications": "Aviseringar",
+  "chat_menu.share": "Dela",
+  "chat_menu.clear_chat": "Rensa chatt",
+  "chat_menu.mark_unread": "Markera oläst",
+  "chat_menu.delete_chat": "Ta bort chatt",
+  "chat_menu.none": "Ingen",
+  "chat_menu.all": "Alla",
+  "chat_menu.mentions": "Omnämnanden",
+  "chat_menu.mute": "Tyst",
+  "chat_menu.marked_unread": "Markerad som oläst",
+  "chat_menu.confirm_clear": "Rensa den här chatten?",
+  "chat_menu.confirm_delete": "Ta bort den här chatten?",
+  "chat_menu.cleared": "Chatten rensad",
+  "chat_menu.deleted": "Chatten borttagen"
+}

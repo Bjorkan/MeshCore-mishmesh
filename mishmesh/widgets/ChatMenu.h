@@ -1,11 +1,15 @@
 // mishmesh/widgets/ChatMenu.h
 #pragma once
 #include <mishmesh/widgets/ListMenu.h>
+#include <mishmesh/core/ChatMenuLocaleStrings.h>
 #include <mishmesh/core/StrUtil.h>
 #include <mishmesh/widgets/ConfirmDialog.h>
 #include <mishmesh/core/MessagesService.h>
+#include <string.h>
 
 namespace mishmesh {
+
+const char* chatMenuText(ChatMenuTextId id);
 
 // Shared chat-level action menu (Region / Notifications / Clear chat / Mark unread /
 // Delete chat). Used both inline (thread Settings tab) and as an overlay (chat-list
@@ -30,11 +34,18 @@ public:
   // Shows `name` in the Region row's value column, or "None" when empty/null.
   void setRegion(const char* name) {
     if (name && name[0]) { copyStr(_region, sizeof(_region), name); }
-    else strcpy(_region, "None");
+    else copyStr(_region, sizeof(_region), chatMenuText(ChatMenuTextId::ChatMenuNone));
   }
   // Shows `s` in the Notifications row's value column ("All"/"Mentions"/"Mute").
   void setNotifyLabel(const char* s) {
-    copyStr(_notify, sizeof(_notify), s ? s : "All");
+    if (!s || strcmp(s, "All") == 0)
+      copyStr(_notify, sizeof(_notify), chatMenuText(ChatMenuTextId::ChatMenuAll));
+    else if (strcmp(s, "Mentions") == 0)
+      copyStr(_notify, sizeof(_notify), chatMenuText(ChatMenuTextId::ChatMenuMentions));
+    else if (strcmp(s, "Mute") == 0)
+      copyStr(_notify, sizeof(_notify), chatMenuText(ChatMenuTextId::ChatMenuMute));
+    else
+      copyStr(_notify, sizeof(_notify), s);
   }
   void reset() {
     _menu.setModel(&_model); _menu.setRowHeight(ROW_H); _menu.resetSelection();
@@ -97,12 +108,12 @@ private:
     int count() const override { return isChannel ? 6 : 5; }
     const char* label(int i) const override {
       switch (actionAt(i)) {
-        case ARegion:     return "Region";
-        case ANotify:     return "Notifications";
-        case AShare:      return "Share";
-        case AClear:      return "Clear chat";
-        case AMarkUnread: return "Mark unread";
-        default:          return "Delete chat";
+        case ARegion:     return chatMenuText(ChatMenuTextId::ChatMenuRegion);
+        case ANotify:     return chatMenuText(ChatMenuTextId::ChatMenuNotifications);
+        case AShare:      return chatMenuText(ChatMenuTextId::ChatMenuShare);
+        case AClear:      return chatMenuText(ChatMenuTextId::ChatMenuClearChat);
+        case AMarkUnread: return chatMenuText(ChatMenuTextId::ChatMenuMarkUnread);
+        default:          return chatMenuText(ChatMenuTextId::ChatMenuDeleteChat);
       }
     }
     const char* value(int i) const override {
