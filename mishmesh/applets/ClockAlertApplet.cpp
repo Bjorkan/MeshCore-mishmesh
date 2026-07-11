@@ -1,12 +1,22 @@
 #include <mishmesh/applets/ClockAlertApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/ClockAlertLocaleStrings.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/core/TimeFormat.h>
 #include <mishmesh/sound/Sounds.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
 
 namespace mishmesh {
+
+static const char* trClockAlert(ClockAlertTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedClockAlertLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedClockAlertLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 static const uint32_t REBEEP_MS = 4000;
 static const uint32_t RING_OUT_MS = 60000;
@@ -44,7 +54,9 @@ int ClockAlertApplet::onRender(Canvas& c) {
   int w = c.width(), h = c.height();
   c.drawGlyph(iconFont(), w / 2 - 6, 4, (uint16_t)(alarm ? Icon::Bell : Icon::Clock),
               DisplayDriver::LIGHT);
-  c.drawText(fontSubtitle(), w / 2, 19, alarm ? "Alarm" : "Timer done",
+  c.drawText(fontSubtitle(), w / 2, 19,
+             alarm ? trClockAlert(ClockAlertTextId::ClockAlertAlarm)
+                   : trClockAlert(ClockAlertTextId::ClockAlertTimerDone),
              DisplayDriver::LIGHT, TextAlign::Center);
 
   char buf[12] = "";
@@ -63,7 +75,8 @@ int ClockAlertApplet::onRender(Canvas& c) {
   // fontNum has digits/':' only; a 12h "7:30 PM" needs a face with letters.
   c.drawText((alarm && fmt12) ? fontSubtitle() : fontNum(), w / 2, 33, buf,
              DisplayDriver::LIGHT, TextAlign::Center);
-  c.drawText(fontCaption(), w / 2, h - 7, "Press any key to dismiss",
+  c.drawText(fontCaption(), w / 2, h - 7,
+             trClockAlert(ClockAlertTextId::ClockAlertPressAnyKey),
              DisplayDriver::LIGHT, TextAlign::Center);
   return 250;
 }
