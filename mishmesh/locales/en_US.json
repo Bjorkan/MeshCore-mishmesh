@@ -132,5 +132,19 @@
   "time.system_volume": "System",
   "time.select_to_save": "Select to save",
   "sound.default": "Default",
-  "sound.silent": "Silent"
+  "sound.silent": "Silent",
+  "system_info.heap_free": "Heap free: %s",
+  "system_info.heap_min": "Heap min: %s",
+  "system_info.heap_total": "Heap total: %s",
+  "system_info.contacts": "Contacts: %u/%u",
+  "system_info.storage": "Storage: %u/%uK",
+  "system_info.storage_unavailable": "Storage: --",
+  "system_info.battery": "Battery: %u.%02uV",
+  "system_info.battery_unavailable": "Battery: --",
+  "system_info.uptime": "Uptime: %uh %02um",
+  "system_info.stats_unavailable": "Stats unavailable",
+  "system_info.factory_reset_keep_identity": "Factory Reset (keep identity)",
+  "system_info.factory_reset_full_wipe": "Factory Reset (full wipe)",
+  "system_info.confirm_keep_identity": "Erase data, keep identity. Can't undo.",
+  "system_info.confirm_full_wipe": "Erase all incl. identity. Can't undo."
 }

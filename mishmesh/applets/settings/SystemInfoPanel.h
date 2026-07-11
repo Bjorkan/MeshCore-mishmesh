@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mishmesh/core/SettingsPanel.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/widgets/ScrollText.h>
 #include <mishmesh/widgets/ListMenu.h>
 #include <mishmesh/widgets/ConfirmDialog.h>
@@ -24,7 +25,7 @@ int formatSystemStats(const SystemStats& s, char out[][SYSSTATS_LINE_LEN], int m
 // AppServices::factoryReset (which reboots) and never returns. Back bubbles to pop.
 class SystemInfoPanel : public SettingsPanel {
 public:
-  const char* title() const override { return "System Info"; }
+  const char* title() const override { return tr(TextId::SettingsSystemInfo); }
   void begin(AppletContext& ctx) override;
   void onShow() override { _built = false; _focus = Focus::Stats; }   // reset on (re)entry
   int  renderBody(Canvas& c, int x, int y, int w, int h) override;
@@ -45,6 +46,7 @@ private:
   ScrollText      _stats;
   ListMenu        _list;
   StaticListModel _actions;
+  const char*     _resetLabels[2] = {nullptr, nullptr};
   ConfirmDialog   _confirm;
   Focus           _focus = Focus::Stats;
   uint32_t        _lastBuilt = 0;

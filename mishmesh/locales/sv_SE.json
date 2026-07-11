@@ -132,5 +132,19 @@
   "time.system_volume": "System",
   "time.select_to_save": "Tryck Select för att spara",
   "sound.default": "Standard",
-  "sound.silent": "Tyst"
+  "sound.silent": "Tyst",
+  "system_info.heap_free": "Ledigt minne: %s",
+  "system_info.heap_min": "Minst ledigt minne: %s",
+  "system_info.heap_total": "Totalt minne: %s",
+  "system_info.contacts": "Kontakter: %u/%u",
+  "system_info.storage": "Lagring: %u/%uK",
+  "system_info.storage_unavailable": "Lagring: --",
+  "system_info.battery": "Batteri: %u.%02uV",
+  "system_info.battery_unavailable": "Batteri: --",
+  "system_info.uptime": "Drifttid: %uh %02um",
+  "system_info.stats_unavailable": "Statistik saknas",
+  "system_info.factory_reset_keep_identity": "Fabriksåterställ (behåll identitet)",
+  "system_info.factory_reset_full_wipe": "Fabriksåterställ (radera allt)",
+  "system_info.confirm_keep_identity": "Radera data, behåll identiteten. Kan inte ångras.",
+  "system_info.confirm_full_wipe": "Radera allt inkl. identiteten. Kan inte ångras."
 }
