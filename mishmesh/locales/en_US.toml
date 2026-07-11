@@ -4,6 +4,12 @@ native_name = "English"
 
 [app]
 settings = "Settings"
+messages = "Messages"
+contacts = "Contacts"
+advert = "Advert"
+clock = "Clock"
+airtime = "Airtime"
+about = "About"
 
 [settings]
 home = "Home"

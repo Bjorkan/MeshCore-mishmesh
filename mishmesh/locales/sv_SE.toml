@@ -4,6 +4,12 @@ native_name = "Svenska"
 
 [app]
 settings = "Inställningar"
+messages = "Meddelanden"
+contacts = "Kontakter"
+advert = "Annonsera"
+clock = "Klocka"
+airtime = "Sändtid"
+about = "Om"
 
 [settings]
 home = "Hem"
