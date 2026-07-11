@@ -194,5 +194,9 @@
   "onboarding.set": "(set)",
   "onboarding.get_started": "Get started",
   "onboarding.you_are_all_set": "You're all set",
-  "onboarding.finish": "Finish"
+  "onboarding.finish": "Finish",
+  "set_path.hash_size": "Hash size",
+  "set_path.path": "Path",
+  "set_path.save": "Save",
+  "set_path.path_hex": "Path (hex)"
 }

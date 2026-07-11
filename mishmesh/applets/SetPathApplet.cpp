@@ -3,9 +3,19 @@
 #include <mishmesh/applets/AppletChrome.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/SetPathLocaleStrings.h>
 #include <stdio.h>
 
 namespace mishmesh {
+
+static const char* trSetPath(SetPathTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedSetPathLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedSetPathLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 void SetPathApplet::onStart(AppletContext& ctx) {
   _app = ctx.app;
@@ -17,9 +27,9 @@ void SetPathApplet::onStart(AppletContext& ctx) {
 }
 
 const char* SetPathApplet::label(int i) const {
-  if (i == 0) return "Hash size";
-  if (i == 1) return "Path";
-  return "Save";
+  if (i == 0) return trSetPath(SetPathTextId::SetPathHashSize);
+  if (i == 1) return trSetPath(SetPathTextId::SetPathPath);
+  return trSetPath(SetPathTextId::SetPathSave);
 }
 const char* SetPathApplet::value(int i) const {
   if (i == 0) {
@@ -62,10 +72,12 @@ bool SetPathApplet::onInput(InputEvent ev) {
   if (ev == InputEvent::Select) {
     int sel = _list.selected();
     if (sel == 0) {
-      _stepper.configure("Hash size", _hash ? *_hash : _hsMin, _hsMin, _hsMax, _hsLabel);
+      _stepper.configure(trSetPath(SetPathTextId::SetPathHashSize),
+                         _hash ? *_hash : _hsMin, _hsMin, _hsMax, _hsLabel);
       _editingHash = true;
     } else if (sel == 1) {
-      keypadApplet().configure(_path, _pathCap - 1, "Path (hex)", nullptr, nullptr);
+      keypadApplet().configure(_path, _pathCap - 1,
+                               trSetPath(SetPathTextId::SetPathPathHex), nullptr, nullptr);
       if (_host) _host->push(&keypadApplet());
     } else {   // Save
       if (_submit && _submit(_ctx)) { if (_host) _host->pop(); }

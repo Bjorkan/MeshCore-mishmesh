@@ -194,5 +194,9 @@
   "onboarding.set": "(inställd)",
   "onboarding.get_started": "Kom igång",
   "onboarding.you_are_all_set": "Allt är klart",
-  "onboarding.finish": "Slutför"
+  "onboarding.finish": "Slutför",
+  "set_path.hash_size": "Hashstorlek",
+  "set_path.path": "Rutt",
+  "set_path.save": "Spara",
+  "set_path.path_hex": "Rutt (hex)"
 }

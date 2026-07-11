@@ -28,6 +28,7 @@ AREA_HEADERS: List[Tuple[str, str, Path]] = [
     ("about.", "About", ROOT / "mishmesh" / "core" / "AboutLocaleStrings.h"),
     ("airtime.", "Airtime", ROOT / "mishmesh" / "core" / "AirtimeLocaleStrings.h"),
     ("onboarding.", "Onboarding", ROOT / "mishmesh" / "core" / "OnboardingLocaleStrings.h"),
+    ("set_path.", "SetPath", ROOT / "mishmesh" / "core" / "SetPathLocaleStrings.h"),
 ]
 TAG_RE = re.compile(r"^[a-z]{2}_[A-Z]{2}$")
 PLACEHOLDER_RE = re.compile(r"\{([A-Za-z_][A-Za-z0-9_]*)\}")
