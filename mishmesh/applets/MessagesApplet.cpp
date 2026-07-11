@@ -8,6 +8,7 @@
 #include <mishmesh/applets/JoinPrivateApplet.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/AppletRegistry.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/widgets/Modal.h>
 #include <mishmesh/text/Fonts.h>
 #include <cstdio>
@@ -55,11 +56,11 @@ MessagesApplet::NewAction MessagesApplet::NewModel::actionAt(int i) const {
 
 const char* MessagesApplet::NewModel::label(int i) const {
   switch (actionAt(i)) {
-    case NewAction::Message:       return "New message";
-    case NewAction::CreatePrivate: return "Create private channel";
-    case NewAction::JoinPrivate:   return "Join private channel";
-    case NewAction::JoinPublic:    return "Join public channel";
-    default:                       return "Join hashtag channel";
+    case NewAction::Message:       return tr(TextId::MessagesNewMessage);
+    case NewAction::CreatePrivate: return tr(TextId::MessagesNewCreatePrivate);
+    case NewAction::JoinPrivate:   return tr(TextId::MessagesNewJoinPrivate);
+    case NewAction::JoinPublic:    return tr(TextId::MessagesNewJoinPublic);
+    default:                       return tr(TextId::MessagesNewJoinHashtag);
   }
 }
 
@@ -83,9 +84,9 @@ void MessagesApplet::onStart(AppletContext& ctx) {
   _new.svc = _svc;
   messagesSettings().begin(ctx);
   _tabs.clear();
-  _tabs.addTab("Chats", (uint16_t)Icon::Message);
-  _tabs.addTab("New", (uint16_t)Icon::Plus);
-  _tabs.addTab("Settings", (uint16_t)Icon::Settings);
+  _tabs.addTab(tr(TextId::MessagesTabChats), (uint16_t)Icon::Message);
+  _tabs.addTab(tr(TextId::MessagesTabNew), (uint16_t)Icon::Plus);
+  _tabs.addTab(tr(TextId::MessagesTabSettings), (uint16_t)Icon::Settings);
   _tab = 0;
   syncList();
 }
@@ -113,7 +114,7 @@ void MessagesApplet::syncList() {
                            : nullptr;          // tab 2 = Settings: rendered by messagesSettings()
   _list.setModel(m);
   _list.setRowHeight(14);
-  _list.setEmptyText(_tab == 0 ? "No messages yet" : "");
+  _list.setEmptyText(_tab == 0 ? tr(TextId::MessagesEmptyNoMessages) : "");
 }
 
 int MessagesApplet::visibleRowCountForTest() const {
@@ -220,7 +221,8 @@ bool MessagesApplet::onInput(InputEvent ev) {
         case NewAction::CreatePrivate: openCreatePrivate(); break;
         case NewAction::JoinPrivate:   openJoinPrivate();   break;
         case NewAction::JoinPublic:
-          applyResult(_svc ? _svc->joinPublicChannel() : ChanResult::Error, "Joined Public");
+          applyResult(_svc ? _svc->joinPublicChannel() : ChanResult::Error,
+                      tr(TextId::MessagesResultJoinedPublic));
           break;
         case NewAction::JoinHashtag:   openJoinHashtag();   break;
       }
@@ -252,14 +254,14 @@ bool MessagesApplet::isHexKey(const char* s) {
 }
 
 bool MessagesApplet::applyResult(ChanResult res, const char* okToast) {
-  const char* t = "Failed"; bool pop = false;
+  const char* t = tr(TextId::MessagesResultFailed); bool pop = false;
   switch (res) {
     case ChanResult::Ok:        t = okToast; pop = true;
                                 _tabs.setSelected(0); _tab = 0; syncList(); break;
-    case ChanResult::Full:      t = "Channels full"; break;
-    case ChanResult::Invalid:   t = "Invalid key"; break;
-    case ChanResult::Duplicate: t = "Already joined"; pop = true; break;
-    case ChanResult::Error:     default: t = "Failed"; break;
+    case ChanResult::Full:      t = tr(TextId::MessagesResultChannelsFull); break;
+    case ChanResult::Invalid:   t = tr(TextId::MessagesResultInvalidKey); break;
+    case ChanResult::Duplicate: t = tr(TextId::MessagesResultAlreadyJoined); pop = true; break;
+    case ChanResult::Error:     default: t = tr(TextId::MessagesResultFailed); break;
   }
   if (_host) _host->postToast(t);
   return pop;
@@ -267,7 +269,7 @@ bool MessagesApplet::applyResult(ChanResult res, const char* okToast) {
 
 void MessagesApplet::openCreatePrivate() {
   _chName[0] = 0;
-  keypadApplet().configure(_chName, sizeof(_chName) - 1, "Create private",
+  keypadApplet().configure(_chName, sizeof(_chName) - 1, tr(TextId::MessagesPromptCreatePrivate),
                            &MessagesApplet::onCreatePrivateDone, this);
   if (_host) _host->push(&keypadApplet());
 }
@@ -281,7 +283,7 @@ void MessagesApplet::openJoinPrivate() {
 
 void MessagesApplet::openJoinHashtag() {
   _chName[0] = 0;
-  keypadApplet().configure(_chName, sizeof(_chName) - 1, "Join hashtag",
+  keypadApplet().configure(_chName, sizeof(_chName) - 1, tr(TextId::MessagesPromptJoinHashtag),
                            &MessagesApplet::onJoinHashtagDone, this);
   if (_host) _host->push(&keypadApplet());
 }
@@ -296,7 +298,7 @@ void MessagesApplet::refreshRegion() {
 void MessagesApplet::openRegionEditor() {
   _regionBuf[0] = 0;
   if (_svc) _svc->region(_menuKey, _regionBuf, sizeof(_regionBuf));   // seed with current
-  keypadApplet().configure(_regionBuf, sizeof(_regionBuf) - 1, "Region",
+  keypadApplet().configure(_regionBuf, sizeof(_regionBuf) - 1, tr(TextId::MessagesPromptRegion),
                            &MessagesApplet::onRegionDone, this);
   if (_host) _host->push(&keypadApplet());
 }
@@ -310,24 +312,24 @@ void MessagesApplet::onRegionDone(void* ctx, const char* text) {
 
 void MessagesApplet::onCreatePrivateDone(void* ctx, const char* text) {
   MessagesApplet* a = (MessagesApplet*)ctx;
-  if (!text || !text[0]) { if (a->_host) a->_host->postToast("Name required"); return; }
+  if (!text || !text[0]) { if (a->_host) a->_host->postToast(tr(TextId::MessagesResultNameRequired)); return; }
   ChanResult r = a->_svc ? a->_svc->createPrivateChannel(text) : ChanResult::Error;
-  char ok[40]; snprintf(ok, sizeof(ok), "Created %s", text);
+  char ok[48]; snprintf(ok, sizeof(ok), tr(TextId::MessagesResultCreated), text);
   a->applyResult(r, ok);   // toast + (on Ok) switch to Chats; keypad already pops itself
 }
 
 bool MessagesApplet::submitJoinPrivate(void* ctx) {
   MessagesApplet* a = (MessagesApplet*)ctx;
   ChanResult r = a->_svc ? a->_svc->joinPrivateChannel(a->_chName, a->_chKey) : ChanResult::Error;
-  char ok[40]; snprintf(ok, sizeof(ok), "Joined %s", a->_chName);
+  char ok[48]; snprintf(ok, sizeof(ok), tr(TextId::MessagesResultJoined), a->_chName);
   return a->applyResult(r, ok);
 }
 
 void MessagesApplet::onJoinHashtagDone(void* ctx, const char* text) {
   MessagesApplet* a = (MessagesApplet*)ctx;
-  if (!text || !text[0]) { if (a->_host) a->_host->postToast("Hashtag required"); return; }
+  if (!text || !text[0]) { if (a->_host) a->_host->postToast(tr(TextId::MessagesResultHashtagRequired)); return; }
   ChanResult r = a->_svc ? a->_svc->joinHashtagChannel(text) : ChanResult::Error;
-  a->applyResult(r, "Joined channel");
+  a->applyResult(r, tr(TextId::MessagesResultJoinedChannel));
 }
 
 void MessagesApplet::setChannelNameForTest(const char* s) {

@@ -5,6 +5,7 @@
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/QuickReplyStore.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/sound/Sounds.h>
 #include <stdio.h>
 
@@ -15,10 +16,11 @@ static void acksLabel(int v, char* out, uint16_t cap) {
 }
 
 const char* MessagesSettingsPanel::Model::label(int i) const {
-  static const char* LABELS[ROW_COUNT] = { "Auto retry DMs", "Auto reset DM paths",
-                                           "Direct msg acks", "Channel sound",
-                                           "Direct sound", "Quick replies" };
-  return (i >= 0 && i < ROW_COUNT) ? LABELS[i] : "";
+  static const TextId LABELS[ROW_COUNT] = {
+    TextId::MessagesSettingsAutoRetryDms, TextId::MessagesSettingsAutoResetDmPaths,
+    TextId::MessagesSettingsDirectMsgAcks, TextId::MessagesSettingsChannelSound,
+    TextId::MessagesSettingsDirectSound, TextId::MessagesSettingsQuickReplies };
+  return (i >= 0 && i < ROW_COUNT) ? tr(LABELS[i]) : "";
 }
 
 bool MessagesSettingsPanel::Model::toggleState(int i) const {
@@ -91,11 +93,13 @@ bool MessagesSettingsPanel::onInput(InputEvent ev) {
       else if (i == Model::AutoResetPath) cfg.autoResetPath = !cfg.autoResetPath;
       _svc->setMessagesConfig(cfg);
     } else if (i == Model::DirectAcks && _svc) {
-      _acks.configure("DM acks", cfg.directAcks, 1, 2, acksLabel);
+      _acks.configure(tr(TextId::MessagesSettingsDmAcks), cfg.directAcks, 1, 2, acksLabel);
       _editingAcks = true;
     } else if ((i == Model::ChannelSound || i == Model::DirectSound) && _host) {
       bool channel = i == Model::ChannelSound;
-      soundPickerApplet().setGlobal(channel, channel ? "Channel msgs" : "Direct msgs");
+      soundPickerApplet().setGlobal(
+          channel, tr(channel ? TextId::MessagesSettingsChannelMsgs
+                              : TextId::MessagesSettingsDirectMsgs));
       _host->push(&soundPickerApplet());
     } else if (i == Model::QuickReplies && _host) {
       // Drill into the canned-message manager. A dedicated detail-applet instance

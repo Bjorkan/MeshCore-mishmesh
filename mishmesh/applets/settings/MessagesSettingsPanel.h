@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mishmesh/core/SettingsPanel.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/core/MessagesService.h>
 #include <mishmesh/widgets/ListMenu.h>
 #include <mishmesh/widgets/StepperDialog.h>
@@ -16,7 +17,7 @@ class AppletHost;
 // quickReplyStore().
 class MessagesSettingsPanel : public SettingsPanel {
 public:
-  const char* title() const override { return "Messages"; }
+  const char* title() const override { return tr(TextId::SettingsMessages); }
   void begin(AppletContext& ctx) override;
   int  renderBody(Canvas& c, int x, int y, int w, int h) override;
   bool onInput(InputEvent ev) override;
