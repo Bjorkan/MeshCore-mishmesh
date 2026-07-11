@@ -171,5 +171,10 @@
   "clock.world.already_added": "Redan tillagd",
   "clock.world.city_removed": "Stad borttagen",
   "about.qr_too_big": "QR-koden är för stor",
-  "about.support_development": "Stöd utvecklingen"
+  "about.support_development": "Stöd utvecklingen",
+  "airtime.tab.budget": "Budget",
+  "airtime.tab.history": "Historik",
+  "airtime.no_data": "Ingen sändtidsdata",
+  "airtime.tx_free": "TX ledig",
+  "airtime.no_history": "Ingen historik"
 }

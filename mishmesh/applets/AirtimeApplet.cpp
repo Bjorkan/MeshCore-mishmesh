@@ -2,12 +2,22 @@
 #include <mishmesh/core/AirtimeHistory.h>
 #include <mishmesh/core/AppletRegistry.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/AirtimeLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
 
 namespace mishmesh {
 
 static const int BAR_H = 13;
+
+static const char* trAirtime(AirtimeTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedAirtimeLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedAirtimeLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 // Compact airtime duration: "12s" under a minute, "5m" under an hour, else
 // "1h2m". Airtime totals span seconds (fresh boot) to hours (long-running RX).
@@ -24,8 +34,8 @@ AirtimeApplet::AirtimeApplet() : Applet("Airtime") {}
 void AirtimeApplet::onStart(AppletContext& ctx) {
   _app = ctx.app;
   _tabs.clear();
-  _tabs.addTab("Budget", (uint16_t)Icon::Hourglass);   // duty-cycle time budget
-  _tabs.addTab("History", (uint16_t)Icon::Radio);      // RF activity over time
+  _tabs.addTab(trAirtime(AirtimeTextId::AirtimeTabBudget), (uint16_t)Icon::Hourglass);   // duty-cycle time budget
+  _tabs.addTab(trAirtime(AirtimeTextId::AirtimeTabHistory), (uint16_t)Icon::Radio);      // RF activity over time
   _tab = 0;
   _tabs.setSelected(0);
 }
@@ -39,7 +49,7 @@ int AirtimeApplet::onRender(Canvas& c) {
 
   if (!_app || !_app->airtimeStats(_st)) {
     c.drawText(fontBody(), w / 2, bodyY + bodyH / 2 - c.fontHeight(fontBody()) / 2,
-               "No airtime data", DisplayDriver::LIGHT, TextAlign::Center);
+               trAirtime(AirtimeTextId::AirtimeNoData), DisplayDriver::LIGHT, TextAlign::Center);
     return 1000;
   }
   return _tab == TAB_HISTORY ? renderHistory(c, bodyY, bodyH)
@@ -60,7 +70,7 @@ int AirtimeApplet::renderBudget(Canvas& c, int y, int h) {
   int nw = c.textWidth(fontNum(), num);
   c.drawText(fontBody(), 3 + nw + 1, y + 1 + nh - c.fontHeight(fontBody()), "%",
              DisplayDriver::LIGHT);
-  c.drawText(fontBody(), 3, y + 2 + nh, "TX free", DisplayDriver::LIGHT);
+  c.drawText(fontBody(), 3, y + 2 + nh, trAirtime(AirtimeTextId::AirtimeTxFree), DisplayDriver::LIGHT);
 
   int barW = LW - 6;
   int barY = y + h - 7;
@@ -98,7 +108,7 @@ int AirtimeApplet::renderHistory(Canvas& c, int y, int h) {
   const AirtimeHistory* hist = _st.history;
   if (!hist) {
     c.drawText(fontBody(), w / 2, y + h / 2 - c.fontHeight(fontBody()) / 2,
-               "No history", DisplayDriver::LIGHT, TextAlign::Center);
+               trAirtime(AirtimeTextId::AirtimeNoHistory), DisplayDriver::LIGHT, TextAlign::Center);
     return 1000;
   }
 

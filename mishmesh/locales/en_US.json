@@ -171,5 +171,10 @@
   "clock.world.already_added": "Already added",
   "clock.world.city_removed": "City removed",
   "about.qr_too_big": "QR too big",
-  "about.support_development": "Support development"
+  "about.support_development": "Support development",
+  "airtime.tab.budget": "Budget",
+  "airtime.tab.history": "History",
+  "airtime.no_data": "No airtime data",
+  "airtime.tx_free": "TX free",
+  "airtime.no_history": "No history"
 }
