@@ -1,0 +1,20 @@
+{
+  "repeater_radio.preset": "Preset",
+  "repeater_radio.frequency": "Frequency",
+  "repeater_radio.bandwidth": "Bandwidth",
+  "repeater_radio.spread_factor": "Spread factor",
+  "repeater_radio.spreading_factor": "Spreading factor",
+  "repeater_radio.coding_rate": "Coding rate",
+  "repeater_radio.tx_power": "TX power",
+  "repeater_radio.save": "Save",
+  "repeater_radio.custom": "Custom",
+  "repeater_radio.radio": "Radio",
+  "repeater_radio.loading": "Loading...",
+  "repeater_radio.saving": "Saving...",
+  "repeater_radio.save_failed": "Save failed",
+  "repeater_radio.saved_reboot": "Saved - reboot to apply",
+  "repeater_radio.select_save": "Select Save to apply",
+  "repeater_radio.frequency_mhz": "Frequency (MHz)",
+  "repeater_radio.tx_power_dbm": "TX power (dBm)",
+  "repeater_radio.discard_changes": "Discard changes?"
+}

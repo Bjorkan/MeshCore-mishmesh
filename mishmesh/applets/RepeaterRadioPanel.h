@@ -42,17 +42,8 @@ public:
 
   // ListModel (6 radio field rows + Save button at 6)
   int count() const override { return 7; }
-  const char* label(int i) const override {
-    static const char* L[7] = { "Preset", "Frequency", "Bandwidth", "Spread factor",
-                                "Coding rate", "TX power", "Save" };
-    return (i >= 0 && i < 7) ? L[i] : "";
-  }
-  const char* value(int i) const override {
-    if (i == 0) { int m = matchPreset(_cfg.freqMhz, _cfg.bwKhz, _cfg.sf, _cfg.cr);
-                  return m >= 0 ? PRESETS[m].name : "Custom"; }
-    if (i >= 1 && i <= 5) return formatRadioField(_vbuf, sizeof(_vbuf), i, _cfg);
-    return nullptr;   // Save row
-  }
+  const char* label(int i) const override;
+  const char* value(int i) const override;
   bool isButton(int i) const override { return i == 6; }
 
 private:

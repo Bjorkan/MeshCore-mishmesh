@@ -1,0 +1,20 @@
+{
+  "repeater_radio.preset": "Förinställning",
+  "repeater_radio.frequency": "Frekvens",
+  "repeater_radio.bandwidth": "Bandbredd",
+  "repeater_radio.spread_factor": "Spridningsfaktor",
+  "repeater_radio.spreading_factor": "Spridningsfaktor",
+  "repeater_radio.coding_rate": "Kodningsgrad",
+  "repeater_radio.tx_power": "Sändeffekt",
+  "repeater_radio.save": "Spara",
+  "repeater_radio.custom": "Anpassad",
+  "repeater_radio.radio": "Radio",
+  "repeater_radio.loading": "Laddar...",
+  "repeater_radio.saving": "Sparar...",
+  "repeater_radio.save_failed": "Kunde inte spara",
+  "repeater_radio.saved_reboot": "Sparat - starta om för att tillämpa",
+  "repeater_radio.select_save": "Välj Spara för att tillämpa",
+  "repeater_radio.frequency_mhz": "Frekvens (MHz)",
+  "repeater_radio.tx_power_dbm": "Sändeffekt (dBm)",
+  "repeater_radio.discard_changes": "Kassera ändringar?"
+}

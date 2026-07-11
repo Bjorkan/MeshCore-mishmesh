@@ -11,6 +11,8 @@
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/ContactsService.h>
 #include <mishmesh/core/CliRequest.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/RepeaterRadioLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 #include <stdio.h>
@@ -19,6 +21,37 @@
 namespace mishmesh {
 
 static const int N = 6;    // field count; Save button is at index N in the ListMenu
+
+static const char* trRepeaterRadio(RepeaterRadioTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedRepeaterRadioLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedRepeaterRadioLocaleString(0, id);
+  return fallback ? fallback : "";
+}
+
+const char* RepeaterRadioPanel::label(int i) const {
+  static const RepeaterRadioTextId IDS[7] = {
+    RepeaterRadioTextId::RepeaterRadioPreset,
+    RepeaterRadioTextId::RepeaterRadioFrequency,
+    RepeaterRadioTextId::RepeaterRadioBandwidth,
+    RepeaterRadioTextId::RepeaterRadioSpreadFactor,
+    RepeaterRadioTextId::RepeaterRadioCodingRate,
+    RepeaterRadioTextId::RepeaterRadioTxPower,
+    RepeaterRadioTextId::RepeaterRadioSave,
+  };
+  return (i >= 0 && i < 7) ? trRepeaterRadio(IDS[i]) : "";
+}
+
+const char* RepeaterRadioPanel::value(int i) const {
+  if (i == 0) {
+    int m = matchPreset(_cfg.freqMhz, _cfg.bwKhz, _cfg.sf, _cfg.cr);
+    return m >= 0 ? PRESETS[m].name
+                  : trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioCustom);
+  }
+  if (i >= 1 && i <= 5) return formatRadioField(_vbuf, sizeof(_vbuf), i, _cfg);
+  return nullptr;   // Save row
+}
 
 void RepeaterRadioPanel::setTarget(const uint8_t* pubKey, const char* name) {
   setTargetFields(_pub, _name, sizeof(_name), pubKey, name);
@@ -132,22 +165,29 @@ int RepeaterRadioPanel::onRender(Canvas& c) {
     }
   }
 
-  int bh = drawTopBar(c, _bar, "Radio", _app, w);
+  int bh = drawTopBar(c, _bar,
+                      trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioRadio), _app, w);
   int top = bh + 1, bottom = h - caph - 1;
 
   // Loading screen: while fetching, show a centered "Loading..." and skip the form.
   if (_phase == Phase::Loading) {
-    c.drawTextCentered(body, 0, top, w, bottom - top, "Loading...", DisplayDriver::LIGHT);
+    c.drawTextCentered(body, 0, top, w, bottom - top,
+                       trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioLoading),
+                       DisplayDriver::LIGHT);
   } else {
     // Field rows + a Save button row (model-driven; see label()/value()/isButton()).
     _view.draw(c, 0, top, w, bottom - top);
   }
 
   const char* status = "";
-  if (_phase == Phase::Saving) status = "Saving...";
-  else if (_saveFailed) status = "Save failed";
-  else if (_rebootNote) status = "Saved - reboot to apply";
-  else if (anyDirty()) status = "Select Save to apply";
+  if (_phase == Phase::Saving)
+    status = trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioSaving);
+  else if (_saveFailed)
+    status = trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioSaveFailed);
+  else if (_rebootNote)
+    status = trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioSavedReboot);
+  else if (anyDirty())
+    status = trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioSelectSave);
   c.drawText(cap, 2, bottom, status, DisplayDriver::LIGHT, TextAlign::Left);
 
   if (_phase == Phase::Confirm) _confirm.draw(c, 0, 0, w, h);
@@ -178,23 +218,41 @@ bool RepeaterRadioPanel::onInput(InputEvent ev) {
       case 0: radioPresetPickerApplet().configure(this); _phase = Phase::Editing;
               if (_host) _host->push(&radioPresetPickerApplet()); return true;
       case 1: _editField = 1; _scratch[0] = 0;
-              keypadApplet().configureNumeric(_scratch, sizeof(_scratch) - 1, "Frequency (MHz)", &RepeaterRadioPanel::onEditDone, this);
+              keypadApplet().configureNumeric(
+                  _scratch, sizeof(_scratch) - 1,
+                  trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioFrequencyMhz),
+                  &RepeaterRadioPanel::onEditDone, this);
               _phase = Phase::Editing; if (_host) _host->push(&keypadApplet()); return true;
-      case 2: radioValuePickerApplet().configure(this, RadioField::Bandwidth, "Bandwidth"); _phase = Phase::Editing;
+      case 2: radioValuePickerApplet().configure(
+                  this, RadioField::Bandwidth,
+                  trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioBandwidth));
+              _phase = Phase::Editing;
               if (_host) _host->push(&radioValuePickerApplet()); return true;
-      case 3: radioValuePickerApplet().configure(this, RadioField::SF, "Spreading factor"); _phase = Phase::Editing;
+      case 3: radioValuePickerApplet().configure(
+                  this, RadioField::SF,
+                  trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioSpreadingFactor));
+              _phase = Phase::Editing;
               if (_host) _host->push(&radioValuePickerApplet()); return true;
-      case 4: radioValuePickerApplet().configure(this, RadioField::CR, "Coding rate"); _phase = Phase::Editing;
+      case 4: radioValuePickerApplet().configure(
+                  this, RadioField::CR,
+                  trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioCodingRate));
+              _phase = Phase::Editing;
               if (_host) _host->push(&radioValuePickerApplet()); return true;
       case 5: _editField = 5; _scratch[0] = 0;
-              keypadApplet().configureNumeric(_scratch, sizeof(_scratch) - 1, "TX power (dBm)", &RepeaterRadioPanel::onEditDone, this);
+              keypadApplet().configureNumeric(
+                  _scratch, sizeof(_scratch) - 1,
+                  trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioTxPowerDbm),
+                  &RepeaterRadioPanel::onEditDone, this);
               _phase = Phase::Editing; if (_host) _host->push(&keypadApplet()); return true;
     }
     return true;
   }
 
   if (ev == InputEvent::Back && anyDirty()) {
-    _confirm.configure("Discard changes?"); _phase = Phase::Confirm; return true;
+    _confirm.configure(
+        trRepeaterRadio(RepeaterRadioTextId::RepeaterRadioDiscardChanges));
+    _phase = Phase::Confirm;
+    return true;
   }
   return false;   // clean Back bubbles
 }
