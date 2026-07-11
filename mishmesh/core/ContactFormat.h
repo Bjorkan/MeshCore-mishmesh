@@ -4,17 +4,18 @@
 #include <stdio.h>
 #include <mishmesh/core/ContactsService.h>   // ContactKind / ContactView
 #include <mishmesh/text/Fonts.h>             // Icon
+#include <mishmesh/core/Locale.h>
 
 namespace mishmesh {
 
 // Human label for an ADV_TYPE_* / ContactKind value.
 inline const char* contactTypeName(uint8_t t) {
   switch (t) {
-    case (uint8_t)ContactKind::Chat:     return "User";
-    case (uint8_t)ContactKind::Repeater: return "Repeater";
-    case (uint8_t)ContactKind::Room:     return "Room";
-    case (uint8_t)ContactKind::Sensor:   return "Sensor";
-    default:                             return "Contact";
+    case (uint8_t)ContactKind::Chat:     return tr(TextId::ContactsTypeUser);
+    case (uint8_t)ContactKind::Repeater: return tr(TextId::ContactsTypeRepeater);
+    case (uint8_t)ContactKind::Room:     return tr(TextId::ContactsTypeRoom);
+    case (uint8_t)ContactKind::Sensor:   return tr(TextId::ContactsTypeSensor);
+    default:                             return tr(TextId::ContactsTypeContact);
   }
 }
 

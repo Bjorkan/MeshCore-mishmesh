@@ -1,20 +1,25 @@
 #include <mishmesh/applets/settings/ContactsSettingsPanel.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <stdio.h>
 
 namespace mishmesh {
 
 static void maxHopsLabel(int raw, char* out, uint16_t cap) {
-  if (raw <= 0)       snprintf(out, cap, "No limit");
-  else if (raw == 1)  snprintf(out, cap, "Direct");
-  else if (raw == 2)  snprintf(out, cap, "1 hop");
-  else                snprintf(out, cap, "%d hops", raw - 1);
+  if (raw <= 0)       snprintf(out, cap, "%s", tr(TextId::ContactsSettingsNoLimit));
+  else if (raw == 1)  snprintf(out, cap, "%s", tr(TextId::ContactsSettingsDirect));
+  else if (raw == 2)  snprintf(out, cap, "%s", tr(TextId::ContactsSettingsOneHop));
+  else                snprintf(out, cap, tr(TextId::ContactsSettingsHops), raw - 1);
 }
 
-static const char* SETTINGS_LABELS[ContactsSettingsModel::ROW_COUNT] = {
-  "Auto-add all", "Auto-add Users", "Auto-add Repeaters", "Auto-add Rooms", "Auto-add Sensors",
-  "Overwrite oldest", "Notify when full", "Max hops", "Remove non-users", "Remove non-favourites", "Remove all contacts",
+static const TextId SETTINGS_LABELS[ContactsSettingsModel::ROW_COUNT] = {
+  TextId::ContactsSettingsAutoAddAll, TextId::ContactsSettingsAutoAddUsers,
+  TextId::ContactsSettingsAutoAddRepeaters, TextId::ContactsSettingsAutoAddRooms,
+  TextId::ContactsSettingsAutoAddSensors, TextId::ContactsSettingsOverwriteOldest,
+  TextId::ContactsSettingsNotifyFull, TextId::ContactsSettingsMaxHops,
+  TextId::ContactsSettingsRemoveNonUsers, TextId::ContactsSettingsRemoveNonFavourites,
+  TextId::ContactsSettingsRemoveAll,
 };
 
 bool ContactsSettingsModel::addAll() const {
@@ -42,7 +47,7 @@ int ContactsSettingsModel::count() const {
 }
 const char* ContactsSettingsModel::label(int i) const {
   Row r = rowAt(i);
-  return (r >= 0 && r < ROW_COUNT) ? SETTINGS_LABELS[r] : "";
+  return (r >= 0 && r < ROW_COUNT) ? tr(SETTINGS_LABELS[r]) : "";
 }
 bool ContactsSettingsModel::isToggle(int i) const {
   Row r = rowAt(i);
@@ -113,7 +118,7 @@ bool ContactsSettingsPanel::onInput(InputEvent ev) {
           else if (_pendingAction == ContactsSettingsModel::RemoveNonFavourites)  removed = _svc->removeNonFavourites();
           else if (_pendingAction == ContactsSettingsModel::RemoveAll)            removed = _svc->removeAll();
           if (removed >= 0 && _host) {
-            char buf[20]; snprintf(buf, sizeof(buf), "Removed %d", removed);
+            char buf[24]; snprintf(buf, sizeof(buf), tr(TextId::ContactsSettingsRemoved), removed);
             _host->postToast(buf);
           }
         }
@@ -142,13 +147,13 @@ bool ContactsSettingsPanel::onInput(InputEvent ev) {
       }
       _svc->setAutoAdd(cfg);
     } else if (r == ContactsSettingsModel::MaxHops && _svc) {
-      _hops.configure("Max hops", _svc->getAutoAdd().maxHops, 0, 64, maxHopsLabel);
+      _hops.configure(tr(TextId::ContactsSettingsMaxHops), _svc->getAutoAdd().maxHops, 0, 64, maxHopsLabel);
       _editingHops = true;
     } else {
       _pendingAction = r;
-      const char* msg = "Remove non-user contacts?";
-      if (r == ContactsSettingsModel::RemoveAll) msg = "Remove ALL contacts?";
-      else if (r == ContactsSettingsModel::RemoveNonFavourites) msg = "Remove all non-favourites?";
+      const char* msg = tr(TextId::ContactsSettingsConfirmNonUsers);
+      if (r == ContactsSettingsModel::RemoveAll) msg = tr(TextId::ContactsSettingsConfirmAll);
+      else if (r == ContactsSettingsModel::RemoveNonFavourites) msg = tr(TextId::ContactsSettingsConfirmNonFavourites);
       _confirm.configure(msg);
       _confirming = true;
     }

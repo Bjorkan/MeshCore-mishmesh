@@ -7,6 +7,7 @@
 #include <mishmesh/core/MessageStore.h>
 #include <mishmesh/text/Fonts.h>
 #include <mishmesh/core/ContactFormat.h>   // kindIcon + contactLabel (shared)
+#include <mishmesh/core/Locale.h>
 #include <stdio.h>
 
 namespace mishmesh {
@@ -84,18 +85,18 @@ ContactsApplet::ContactsApplet()
 
 static const char* emptyLabel(ContactKind k) {
   switch (k) {
-    case ContactKind::Chat:     return "No contacts";
-    case ContactKind::Repeater: return "No repeaters";
-    case ContactKind::Room:     return "No rooms";
-    default:                    return "No sensors";
+    case ContactKind::Chat:     return tr(TextId::ContactsEmptyContacts);
+    case ContactKind::Repeater: return tr(TextId::ContactsEmptyRepeaters);
+    case ContactKind::Room:     return tr(TextId::ContactsEmptyRooms);
+    default:                    return tr(TextId::ContactsEmptySensors);
   }
 }
 
 void ContactsApplet::syncListToTab() {
   const TabSlot& s = currentSlot();
   switch (s.kind) {
-    case TabKind::Favourites: _list.setModel(&_favs); _list.setEmptyText("No favourites"); break;
-    case TabKind::Discovered: _list.setModel(&_discover); _list.setEmptyText("No new devices"); break;
+    case TabKind::Favourites: _list.setModel(&_favs); _list.setEmptyText(tr(TextId::ContactsEmptyFavourites)); break;
+    case TabKind::Discovered: _list.setModel(&_discover); _list.setEmptyText(tr(TextId::ContactsEmptyNewDevices)); break;
     case TabKind::Settings:   _list.setEmptyText(nullptr); break;   // rendered by contactsSettings()
     default:                  _list.setModel(&_models[(int)s.contactKind - 1]);          // kinds are 1-based
                               _list.setEmptyText(emptyLabel(s.contactKind)); break;
@@ -112,23 +113,25 @@ void ContactsApplet::rebuildTabs() {
   _slotCount = 0;
   int favCount = _pickMode ? _favs.count() : (_svc ? _svc->countFavourites() : 0);
   if (favCount > 0) {
-    _tabs.addTab("Favorites", (uint16_t)Icon::Star);
+    _tabs.addTab(tr(TextId::ContactsTabFavorites), (uint16_t)Icon::Star);
     _slots[_slotCount++] = {TabKind::Favourites, ContactKind::Chat};
   }
   if (_pickMode) {
-    _tabs.addTab("Contacts", tabIcon(ContactKind::Chat));
+    _tabs.addTab(tr(TextId::ContactsTabContacts), tabIcon(ContactKind::Chat));
     _slots[_slotCount++] = {TabKind::Kind, ContactKind::Chat};
   } else {
     static const ContactKind KINDS[4] = {
       ContactKind::Chat, ContactKind::Repeater, ContactKind::Room, ContactKind::Sensor };
-    static const char* KIND_LABELS[4] = { "Contacts", "Repeaters", "Rooms", "Sensors" };
+    static const TextId KIND_LABELS[4] = {
+      TextId::ContactsTabContacts, TextId::ContactsTabRepeaters,
+      TextId::ContactsTabRooms, TextId::ContactsTabSensors };
     for (int i = 0; i < 4; i++) {
-      _tabs.addTab(KIND_LABELS[i], tabIcon(KINDS[i]));
+      _tabs.addTab(tr(KIND_LABELS[i]), tabIcon(KINDS[i]));
       _slots[_slotCount++] = {TabKind::Kind, KINDS[i]};
     }
-    _tabs.addTab("Discover", (uint16_t)Icon::Search);   // seen-but-not-added nodes
+    _tabs.addTab(tr(TextId::ContactsTabDiscover), (uint16_t)Icon::Search);   // seen-but-not-added nodes
     _slots[_slotCount++] = {TabKind::Discovered, ContactKind::Chat};
-    _tabs.addTab("Settings", (uint16_t)Icon::Settings);
+    _tabs.addTab(tr(TextId::ContactsTabSettings), (uint16_t)Icon::Settings);
     _slots[_slotCount++] = {TabKind::Settings, ContactKind::Chat};
   }
 

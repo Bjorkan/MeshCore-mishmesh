@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mishmesh/core/SettingsPanel.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/core/ContactsService.h>
 #include <mishmesh/widgets/ListMenu.h>
 #include <mishmesh/widgets/StepperDialog.h>
@@ -32,7 +33,7 @@ public:
 // (remove-confirm). Source of truth: ContactsService.
 class ContactsSettingsPanel : public SettingsPanel {
 public:
-  const char* title() const override { return "Contacts"; }
+  const char* title() const override { return tr(TextId::SettingsContacts); }
   void begin(AppletContext& ctx) override;
   int  renderBody(Canvas& c, int x, int y, int w, int h) override;
   bool onInput(InputEvent ev) override;
