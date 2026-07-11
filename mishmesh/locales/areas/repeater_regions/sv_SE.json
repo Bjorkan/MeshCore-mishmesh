@@ -1,0 +1,12 @@
+{
+  "repeater_regions.add_region": "Lägg till region",
+  "repeater_regions.delete_region": "Ta bort region",
+  "repeater_regions.save": "Spara",
+  "repeater_regions.saved": "Sparat",
+  "repeater_regions.save_failed": "Kunde inte spara",
+  "repeater_regions.no_response": "[inget svar]",
+  "repeater_regions.regions": "Regioner",
+  "repeater_regions.loading": "Laddar...",
+  "repeater_regions.working": "Arbetar...",
+  "repeater_regions.region_name": "Regionnamn"
+}

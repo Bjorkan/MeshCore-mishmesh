@@ -6,16 +6,28 @@
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/ContactsService.h>
 #include <mishmesh/core/CliRequest.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/RepeaterRegionsLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 #include <stdio.h>
 
 namespace mishmesh {
 
+static const char* trRepeaterRegions(RepeaterRegionsTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedRepeaterRegionsLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedRepeaterRegionsLocaleString(0, id);
+  return fallback ? fallback : "";
+}
+
 const char* RepeaterRegionsApplet::Model::label(int i) const {
   if (i < p->_count) return p->_reg[i].name;
   int a = i - p->_count;
-  return a == 0 ? "Add region" : a == 1 ? "Delete region" : "Save";
+  return a == 0 ? trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsAddRegion)
+       : a == 1 ? trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsDeleteRegion)
+                : trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsSave);
 }
 
 void RepeaterRegionsApplet::setTarget(const uint8_t* pubKey, const char* name) {
@@ -97,24 +109,33 @@ int RepeaterRegionsApplet::onRender(Canvas& c) {
             else { copyStr(_status, sizeof(_status), r); _op = Op::None; _phase = Phase::List; }
             break;
           case Op::Save:
-            if (_host) _host->postToast(okReply ? "Saved" : "Save failed");
+            if (_host) _host->postToast(okReply
+                ? trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsSaved)
+                : trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsSaveFailed));
             _op = Op::None; _phase = Phase::List; break;
           default: _op = Op::None; _phase = Phase::List; break;
         }
       }
     } else if (st == CliPoll::TimedOut) {
-      strncpy(_status, "[no response]", sizeof(_status) - 1);
+      copyStr(_status, sizeof(_status),
+              trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsNoResponse));
       _op = Op::None; _phase = Phase::List;
     }
   }
 
-  int bh = drawTopBar(c, _bar, _name[0] ? _name : "Regions", _app, w);
+  int bh = drawTopBar(c, _bar,
+                      _name[0] ? _name
+                               : trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsRegions),
+                      _app, w);
   int top = bh + 1, bottom = h - caph - 1;
   if (_phase == Phase::Loading) {
-    c.drawTextCentered(fontBody(), 0, top, w, bottom - top, "Loading...", DisplayDriver::LIGHT);
+    c.drawTextCentered(fontBody(), 0, top, w, bottom - top,
+                       trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsLoading),
+                       DisplayDriver::LIGHT);
   } else {
     _menu.draw(c, 0, top, w, bottom - top);
-    const char* status = _phase == Phase::Busy ? "Working..." : _status;
+    const char* status = _phase == Phase::Busy
+        ? trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsWorking) : _status;
     c.drawText(cap, 2, bottom, status, DisplayDriver::LIGHT, TextAlign::Left);
   }
 
@@ -138,8 +159,12 @@ bool RepeaterRegionsApplet::onInput(InputEvent ev) {
       _kpDelete = (a == 1);
       _scratch[0] = 0;
       _phase = Phase::Editing;
-      keypadApplet().configure(_scratch, NAME_CAP - 1, _kpDelete ? "Delete region" : "Region name",
-                               &RepeaterRegionsApplet::onKeypadDone, this);
+      keypadApplet().configure(
+          _scratch, NAME_CAP - 1,
+          _kpDelete
+              ? trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsDeleteRegion)
+              : trRepeaterRegions(RepeaterRegionsTextId::RepeaterRegionsRegionName),
+          &RepeaterRegionsApplet::onKeypadDone, this);
       if (_host) _host->push(&keypadApplet());
     }
     return true;
