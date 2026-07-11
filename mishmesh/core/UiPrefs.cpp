@@ -1,6 +1,7 @@
 #include <mishmesh/core/UiPrefs.h>
 #include <mishmesh/core/AppletStorage.h>
 #include <mishmesh/core/AppletRegistry.h>
+#include <mishmesh/core/Locale.h>
 #include <string.h>
 
 namespace mishmesh {
@@ -10,6 +11,7 @@ static const char* const QA_DEFAULT[2] = { "Contacts", "Messages" };
 
 void UiPrefs::begin(AppletStorage* s) {
   _st = s;
+  localeManager().begin(s);
   _battPercent = false;
   _dark = true;
   _qa[0][0] = _qa[1][0] = 0;
@@ -66,6 +68,7 @@ const AppletRegistration* UiPrefs::quickAction(int slot) const {
 
 void UiPrefs::resetForTest() {
   _st = nullptr;
+  localeManager().resetForTest();
   _battPercent = false;
   _dark = true;
   _qa[0][0] = _qa[1][0] = 0;

@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "name": "Swedish",
+    "nativeName": "Svenska"
+  },
+  "app.settings": "Inställningar",
+  "settings.home": "Hem",
+  "settings.contacts": "Kontakter",
+  "settings.messages": "Meddelanden",
+  "settings.advert": "Annonsering",
+  "settings.radio": "Radio",
+  "settings.time_date": "Tid och datum",
+  "settings.language": "Språk",
+  "settings.system_info": "Systeminfo",
+  "settings.reset_onboarding": "Återställ introduktion",
+  "home.battery_percent": "Batteriprocent",
+  "home.screen_sleep": "Skärmsläckning",
+  "home.left_shortcut": "Vänster genväg",
+  "home.right_shortcut": "Höger genväg"
+}

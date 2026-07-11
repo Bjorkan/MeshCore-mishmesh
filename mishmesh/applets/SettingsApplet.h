@@ -2,6 +2,7 @@
 
 #include <mishmesh/core/Applet.h>
 #include <mishmesh/core/SettingsPanel.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/widgets/ListMenu.h>
 #include <mishmesh/widgets/StatusBar.h>
 
@@ -21,7 +22,7 @@ public:
 
 private:
   struct Entry {
-    const char*    label;
+    TextId         label;
     SettingsPanel* (*panel)();
     uint16_t       icon;
     bool           (*available)(const AppletContext&);

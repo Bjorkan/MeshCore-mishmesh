@@ -34,20 +34,20 @@ static bool devBuildOnly(const AppletContext&) {
 }
 
 const SettingsApplet::Entry SettingsApplet::ENTRIES[ENTRY_COUNT] = {
-  { "Home",        homePanelPtr,       (uint16_t)Icon::Home,      always    },
-  { "Contacts",    contactsPanelPtr,   (uint16_t)Icon::Users,     always    },
-  { "Messages",    messagesPanelPtr,   (uint16_t)Icon::Message,   always    },
-  { "Advert",      advertPanelPtr,     (uint16_t)Icon::Radio,     always    },
-  { "Radio",       radioPanelPtr,      (uint16_t)Icon::Wifi,      always    },
-  { "Time & date", timePanelPtr,       (uint16_t)Icon::Clock,     always    },
-  { "System Info", systemInfoPanelPtr, (uint16_t)Icon::Chip,      always    },
-  { "Reset onboarding", devResetPanelPtr, (uint16_t)Icon::Reload, devBuildOnly },
+  { TextId::SettingsHome,        homePanelPtr,       (uint16_t)Icon::Home,      always    },
+  { TextId::SettingsContacts,    contactsPanelPtr,   (uint16_t)Icon::Users,     always    },
+  { TextId::SettingsMessages,    messagesPanelPtr,   (uint16_t)Icon::Message,   always    },
+  { TextId::SettingsAdvert,      advertPanelPtr,     (uint16_t)Icon::Radio,     always    },
+  { TextId::SettingsRadio,       radioPanelPtr,      (uint16_t)Icon::Wifi,      always    },
+  { TextId::SettingsTimeDate,    timePanelPtr,       (uint16_t)Icon::Clock,     always    },
+  { TextId::SettingsSystemInfo,  systemInfoPanelPtr, (uint16_t)Icon::Chip,      always    },
+  { TextId::SettingsResetOnboarding, devResetPanelPtr, (uint16_t)Icon::Reload, devBuildOnly },
 };
 
 int SettingsApplet::Model::count() const { return owner ? owner->_visibleCount : 0; }
 const char* SettingsApplet::Model::label(int i) const {
   if (!owner || i < 0 || i >= owner->_visibleCount) return "";
-  return ENTRIES[owner->_visible[i]].label;
+  return tr(ENTRIES[owner->_visible[i]].label);
 }
 uint16_t SettingsApplet::Model::icon(int i) const {
   if (!owner || i < 0 || i >= owner->_visibleCount) return 0;
@@ -57,7 +57,7 @@ uint16_t SettingsApplet::Model::icon(int i) const {
 void SettingsApplet::onStart(AppletContext& ctx) {
   _host = ctx.host;
   _app  = ctx.app;
-  _bar.setTitle("Settings");
+  _bar.setTitle(tr(TextId::AppSettings));
   _visibleCount = 0;
   for (int i = 0; i < ENTRY_COUNT; i++) {
     if (ENTRIES[i].available(ctx)) _visible[_visibleCount++] = i;
@@ -69,6 +69,7 @@ void SettingsApplet::onStart(AppletContext& ctx) {
 }
 
 int SettingsApplet::onRender(Canvas& c) {
+  _bar.setTitle(tr(TextId::AppSettings));
   int bw = 0, bh = 0; _bar.measure(bw, bh);
   _bar.setBattery(_app ? _app->batteryMillivolts() : 0);
   _bar.draw(c, 0, 0, c.width(), bh);

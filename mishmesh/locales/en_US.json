@@ -1,0 +1,20 @@
+{
+  "_meta": {
+    "name": "English",
+    "nativeName": "English"
+  },
+  "app.settings": "Settings",
+  "settings.home": "Home",
+  "settings.contacts": "Contacts",
+  "settings.messages": "Messages",
+  "settings.advert": "Advert",
+  "settings.radio": "Radio",
+  "settings.time_date": "Time & date",
+  "settings.language": "Language",
+  "settings.system_info": "System Info",
+  "settings.reset_onboarding": "Reset onboarding",
+  "home.battery_percent": "Battery percent",
+  "home.screen_sleep": "Screen sleep",
+  "home.left_shortcut": "Left shortcut",
+  "home.right_shortcut": "Right shortcut"
+}

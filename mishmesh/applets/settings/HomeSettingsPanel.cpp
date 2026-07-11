@@ -57,10 +57,16 @@ static void sleepStepLabel(int idx, char* out, uint16_t cap) {
   snprintf(out, cap, "%s", screenSleepLabel(idx));
 }
 
+static void localeStepLabel(int idx, char* out, uint16_t cap) {
+  snprintf(out, cap, "%s", localeManager().descriptor((uint8_t)idx).name);
+}
+
 const char* HomeSettingsPanel::Model::label(int i) const {
-  static const char* const LABELS[ROW_COUNT] = {
-    "Battery percent", "Screen sleep", "Left shortcut", "Right shortcut" };
-  return (i >= 0 && i < ROW_COUNT) ? LABELS[i] : "";
+  static const TextId LABELS[ROW_COUNT] = {
+    TextId::HomeBatteryPercent, TextId::HomeScreenSleep,
+    TextId::HomeLeftShortcut, TextId::HomeRightShortcut,
+    TextId::SettingsLanguage };
+  return (i >= 0 && i < ROW_COUNT) ? tr(LABELS[i]) : "";
 }
 
 bool HomeSettingsPanel::Model::toggleState(int i) const {
@@ -71,6 +77,7 @@ const char* HomeSettingsPanel::Model::value(int i) const {
   if (i == ScreenSleep) return app ? screenSleepLabel(app->screenSleepIndex()) : "";
   if (i == LeftAction)  return uiPrefs().quickActionLabel(UiPrefs::SLOT_LEFT);
   if (i == RightAction) return uiPrefs().quickActionLabel(UiPrefs::SLOT_RIGHT);
+  if (i == Language)    return localeManager().current().name;
   return nullptr;
 }
 
@@ -81,22 +88,31 @@ void HomeSettingsPanel::begin(AppletContext& ctx) {
   _list.setModel(&_model);
   _list.resetSelection();   // singleton reuse: setModel skips reset on same-ptr rebind
   _editingSleep = false;
+  _editingLanguage = false;
 }
 
 int HomeSettingsPanel::renderBody(Canvas& c, int x, int y, int w, int h) {
   _list.draw(c, x, y, w, h);
-  if (_editingSleep) { _stepper.draw(c, 0, 0, c.width(), c.height()); return 100; }
+  if (_editingSleep || _editingLanguage) {
+    _stepper.draw(c, 0, 0, c.width(), c.height());
+    return 100;
+  }
   return _list.needsAnimation() ? ListMenu::TICK_MS : 500;
 }
 
 bool HomeSettingsPanel::onInput(InputEvent ev) {
-  if (_editingSleep) {
+  if (_editingSleep || _editingLanguage) {
     if (_stepper.onInput(ev)) {
       StepperResult r = _stepper.result();
       if (r != StepperResult::None) {
-        if (r == StepperResult::Confirmed && _model.app)
-          _model.app->setScreenSleepIndex((uint8_t)_stepper.value());
+        if (r == StepperResult::Confirmed) {
+          if (_editingSleep && _model.app)
+            _model.app->setScreenSleepIndex((uint8_t)_stepper.value());
+          if (_editingLanguage)
+            localeManager().setCurrent((uint8_t)_stepper.value());
+        }
         _editingSleep = false;
+        _editingLanguage = false;
         _stepper.reset();
       }
     }
@@ -110,10 +126,14 @@ bool HomeSettingsPanel::onInput(InputEvent ev) {
       uiPrefs().setBattShowPercent(!uiPrefs().battShowPercent());
     } else if (i == Model::ScreenSleep) {
       if (_model.app) {
-        _stepper.configure("Screen sleep", _model.app->screenSleepIndex(),
+        _stepper.configure(tr(TextId::HomeScreenSleep), _model.app->screenSleepIndex(),
                            0, SCREEN_SLEEP_COUNT - 1, sleepStepLabel);
         _editingSleep = true;
       }
+    } else if (i == Model::Language) {
+      _stepper.configure(tr(TextId::SettingsLanguage), localeManager().currentIndex(),
+                         0, localeManager().count() - 1, localeStepLabel);
+      _editingLanguage = true;
     } else if (_host) {
       static SettingsDetailApplet detail;   // one level below the shared detail
       quickActionPicker().setSlot(i == Model::LeftAction ? UiPrefs::SLOT_LEFT
