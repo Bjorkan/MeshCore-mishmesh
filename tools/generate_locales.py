@@ -7,6 +7,8 @@ mismatches are rejected so spelling mistakes do not silently ship.
 
 Large UI areas may be emitted to separate generated headers to keep the
 original TextId table stable while still using the same locale JSON files.
+Optional area fragments under mishmesh/locales/areas/<area>/<locale>.json are
+merged into the corresponding top-level locale before validation.
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from typing import Dict, Iterable, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCALE_DIR = ROOT / "mishmesh" / "locales"
+AREA_LOCALE_DIR = LOCALE_DIR / "areas"
 HEADER_PATH = ROOT / "mishmesh" / "core" / "LocaleStrings.h"
 AREA_HEADERS: List[Tuple[str, str, Path]] = [
     ("system_info.", "SystemInfo", ROOT / "mishmesh" / "core" / "SystemInfoLocaleStrings.h"),
@@ -77,6 +80,28 @@ def load_locale(path: Path) -> LocaleFile:
     return LocaleFile(tag=tag, native_name=native_name, strings=raw)
 
 
+def load_area_fragments(tag: str) -> Dict[str, str]:
+    merged: Dict[str, str] = {}
+    if not AREA_LOCALE_DIR.exists():
+        return merged
+    for path in sorted(AREA_LOCALE_DIR.glob(f"*/{tag}.json")):
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError(f"{path.relative_to(ROOT)}: {exc}") from exc
+        if not isinstance(raw, dict):
+            raise ValueError(f"{path.relative_to(ROOT)}: root must be a JSON object")
+        for key, value in raw.items():
+            if key == "_meta":
+                raise ValueError(f"{path.relative_to(ROOT)}: area fragments must not contain _meta")
+            if not isinstance(key, str) or not isinstance(value, str):
+                raise ValueError(f"{path.relative_to(ROOT)}: translation values must be strings ({key!r})")
+            if key in merged:
+                raise ValueError(f"{path.relative_to(ROOT)}: duplicate area key {key!r}")
+            merged[key] = value
+    return merged
+
+
 def load_all() -> tuple[List[str], List[LocaleFile]]:
     paths = sorted(LOCALE_DIR.glob("*.json"))
     english_path = LOCALE_DIR / "en_US.json"
@@ -84,6 +109,16 @@ def load_all() -> tuple[List[str], List[LocaleFile]]:
         raise ValueError("mishmesh/locales/en_US.json is required")
     locales = [load_locale(english_path)]
     locales.extend(load_locale(path) for path in paths if path != english_path)
+
+    merged_locales: List[LocaleFile] = []
+    for locale in locales:
+        strings = dict(locale.strings)
+        for key, value in load_area_fragments(locale.tag).items():
+            if key in strings:
+                raise ValueError(f"{locale.tag}: duplicate key in top-level locale and area fragment: {key}")
+            strings[key] = value
+        merged_locales.append(LocaleFile(locale.tag, locale.native_name, strings))
+    locales = merged_locales
 
     keys = list(locales[0].strings.keys())
     if not keys:
