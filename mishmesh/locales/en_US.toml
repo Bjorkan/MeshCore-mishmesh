@@ -81,3 +81,46 @@ include_sensors = "Include sensors"
 [contacts.full]
 title = "Contacts full"
 dismiss = "Press any key to dismiss"
+
+[messages.tabs]
+chats = "Chats"
+new = "New"
+settings = "Settings"
+
+[messages.empty]
+no_messages = "No messages yet"
+
+[messages.new]
+message = "New message"
+create_private = "Create private channel"
+join_private = "Join private channel"
+join_public = "Join public channel"
+join_hashtag = "Join hashtag channel"
+
+[messages.result]
+failed = "Failed"
+channels_full = "Channels full"
+invalid_key = "Invalid key"
+already_joined = "Already joined"
+name_required = "Name required"
+created = "Created %s"
+joined = "Joined %s"
+hashtag_required = "Hashtag required"
+joined_channel = "Joined channel"
+joined_public = "Joined Public"
+
+[messages.prompt]
+create_private = "Create private"
+join_hashtag = "Join hashtag"
+region = "Region"
+
+[messages.settings]
+auto_retry_dms = "Auto retry DMs"
+auto_reset_dm_paths = "Auto reset DM paths"
+direct_msg_acks = "Direct msg acks"
+channel_sound = "Channel sound"
+direct_sound = "Direct sound"
+quick_replies = "Quick replies"
+dm_acks = "DM acks"
+channel_msgs = "Channel msgs"
+direct_msgs = "Direct msgs"

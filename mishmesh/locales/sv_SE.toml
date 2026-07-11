@@ -81,3 +81,46 @@ include_sensors = "Inkludera sensorer"
 [contacts.full]
 title = "Kontaktlista full"
 dismiss = "Tryck för att stänga"
+
+[messages.tabs]
+chats = "Chattar"
+new = "Nytt"
+settings = "Inställningar"
+
+[messages.empty]
+no_messages = "Inga meddelanden än"
+
+[messages.new]
+message = "Nytt meddelande"
+create_private = "Skapa privat kanal"
+join_private = "Gå med i privat kanal"
+join_public = "Gå med i offentlig kanal"
+join_hashtag = "Gå med i hashtagkanal"
+
+[messages.result]
+failed = "Misslyckades"
+channels_full = "Kanallistan full"
+invalid_key = "Ogiltig nyckel"
+already_joined = "Redan ansluten"
+name_required = "Namn krävs"
+created = "Skapade %s"
+joined = "Gick med i %s"
+hashtag_required = "Hashtag krävs"
+joined_channel = "Gick med i kanal"
+joined_public = "Gick med i Public"
+
+[messages.prompt]
+create_private = "Skapa privat"
+join_hashtag = "Gå med i hashtag"
+region = "Region"
+
+[messages.settings]
+auto_retry_dms = "Auto-omförsök DM"
+auto_reset_dm_paths = "Auto-återställ DM-rutter"
+direct_msg_acks = "DM-kvittenser"
+channel_sound = "Kanalljud"
+direct_sound = "Direktljud"
+quick_replies = "Snabbsvar"
+dm_acks = "DM-kvittenser"
+channel_msgs = "Kanalmeddelanden"
+direct_msgs = "Direktmeddelanden"
