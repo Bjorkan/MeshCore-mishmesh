@@ -4,7 +4,9 @@
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/AppletStorage.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/core/MsgTypes.h>
+#include <mishmesh/core/ServerLoginLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <mishmesh/applets/MessageThreadApplet.h>
 #include <mishmesh/applets/RepeaterManageApplet.h>
@@ -12,6 +14,14 @@
 #include <stdio.h>
 
 namespace mishmesh {
+
+static const char* trServerLogin(ServerLoginTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedServerLoginLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedServerLoginLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 void ServerLoginApplet::setTarget(const uint8_t* pubKey, const char* name, Mode mode) {
   memcpy(_pub, pubKey, 6);
@@ -46,7 +56,9 @@ void ServerLoginApplet::promptPassword() {
   _phase = Phase::Entering;
   _submitted = false;
   _pwBuf[0] = 0;
-  const char* title = (_mode == Mode::Repeater) ? "Repeater password" : "Room password";
+  const char* title = (_mode == Mode::Repeater)
+      ? trServerLogin(ServerLoginTextId::ServerLoginRepeaterPassword)
+      : trServerLogin(ServerLoginTextId::ServerLoginRoomPassword);
   keypadApplet().configure(_pwBuf, sizeof(_pwBuf) - 1, title,
                            &ServerLoginApplet::onPwDone, this);
   if (_host) _host->push(&keypadApplet());
@@ -106,10 +118,15 @@ int ServerLoginApplet::onRender(Canvas& c) {
   const Font* body = fontBody();
   const Font* cap = fontCaption();
   int lh = c.lineHeight(body);
-  const char* fallback = (_mode == Mode::Repeater) ? "Repeater" : "Room";
+  const char* fallback = (_mode == Mode::Repeater)
+      ? trServerLogin(ServerLoginTextId::ServerLoginRepeater)
+      : trServerLogin(ServerLoginTextId::ServerLoginRoom);
   c.drawText(body, w / 2, 6, _name[0] ? _name : fallback, DisplayDriver::LIGHT, TextAlign::Center);
-  c.drawText(cap, w / 2, 6 + lh + 4, "Logging in...", DisplayDriver::LIGHT, TextAlign::Center);
-  c.drawText(cap, w / 2, h - c.lineHeight(cap) - 2, "Back to cancel",
+  c.drawText(cap, w / 2, 6 + lh + 4,
+             trServerLogin(ServerLoginTextId::ServerLoginLoggingIn),
+             DisplayDriver::LIGHT, TextAlign::Center);
+  c.drawText(cap, w / 2, h - c.lineHeight(cap) - 2,
+             trServerLogin(ServerLoginTextId::ServerLoginBackToCancel),
              DisplayDriver::LIGHT, TextAlign::Center);
 
   if (_phase == Phase::WaitingLogin) {
@@ -121,20 +138,23 @@ int ServerLoginApplet::onRender(Canvas& c) {
       if (_svc && _svc->loginResult(_pub, ok, admin, perms)) {
         if (ok) {
           if (_freshPw && _storage) {
-            _remember.configure("Save password?");
+            _remember.configure(trServerLogin(ServerLoginTextId::ServerLoginSavePassword));
             _phase = Phase::AskRemember;
             return 100;
           }
           onSuccess();
           return 0;
         }
-        if (_host) _host->postToast("Login failed");
+        if (_host) _host->postToast(trServerLogin(ServerLoginTextId::ServerLoginFailed));
         promptPassword();       // let them re-enter
         return 50;
       }
       _seqStart = seq;          // a result for a different contact; keep waiting
     } else if (c.now() - _waitStartMs > LOGIN_TIMEOUT_MS) {
-      if (_host) { _host->postToast("No response"); _host->pop(); }
+      if (_host) {
+        _host->postToast(trServerLogin(ServerLoginTextId::ServerLoginNoResponse));
+        _host->pop();
+      }
       return 0;
     }
     return 150;

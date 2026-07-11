@@ -1,0 +1,11 @@
+{
+  "server_login.repeater_password": "Repeaterlösenord",
+  "server_login.room_password": "Rumslösenord",
+  "server_login.repeater": "Repeater",
+  "server_login.room": "Rum",
+  "server_login.logging_in": "Loggar in...",
+  "server_login.back_to_cancel": "Bakåt för att avbryta",
+  "server_login.save_password": "Spara lösenord?",
+  "server_login.failed": "Inloggningen misslyckades",
+  "server_login.no_response": "Inget svar"
+}
