@@ -5,10 +5,20 @@
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/ContactsService.h>
 #include <mishmesh/core/CliRequest.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/RepeaterNeighborsLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 
 namespace mishmesh {
+
+static const char* trRepeaterNeighbors(RepeaterNeighborsTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedRepeaterNeighborsLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedRepeaterNeighborsLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 void RepeaterNeighborsApplet::setTarget(const uint8_t* pubKey, const char* name) {
   setTargetFields(_pub, _name, sizeof(_name), pubKey, name);
@@ -29,7 +39,7 @@ void RepeaterNeighborsApplet::onStart(AppletContext& ctx) {
   _host = ctx.host; _svc = ctx.contacts; _app = ctx.app;
   _view.setWrap(true);
   _view.clear();
-  _view.addLine("Loading...");
+  _view.addLine(trRepeaterNeighbors(RepeaterNeighborsTextId::RepeaterNeighborsLoading));
   _pending = false;
   if (_svc) {
     _startSeq = cliFire(_svc, _req, _pub, "neighbors", _host ? _host->nowMs() : 0, 20000);
@@ -47,11 +57,16 @@ int RepeaterNeighborsApplet::onRender(Canvas& c) {
     if (s == CliPoll::Ready) {
       _view.clear(); appendMultiline(resp); _pending = false;
     } else if (s == CliPoll::TimedOut) {
-      _view.clear(); _view.addLine("[no response]"); _pending = false;
+      _view.clear();
+      _view.addLine(trRepeaterNeighbors(RepeaterNeighborsTextId::RepeaterNeighborsNoResponse));
+      _pending = false;
     }
   }
 
-  int bh = drawTopBar(c, _bar, _name[0] ? _name : "Neighbors", _app, w);
+  int bh = drawTopBar(c, _bar,
+                      _name[0] ? _name
+                               : trRepeaterNeighbors(RepeaterNeighborsTextId::RepeaterNeighborsNeighbors),
+                      _app, w);
   int top = bh + 1;
   _view.draw(c, 0, top, w, h - top);
 
