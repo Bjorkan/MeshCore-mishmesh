@@ -1,0 +1,13 @@
+{
+  "repeater_acl.add_user": "Lägg till användare",
+  "repeater_acl.read_only": "Skrivskyddad",
+  "repeater_acl.read_write": "Läs/skriv",
+  "repeater_acl.admin": "Admin",
+  "repeater_acl.remove": "Ta bort",
+  "repeater_acl.error": "Fel",
+  "repeater_acl.no_response": "[inget svar]",
+  "repeater_acl.access": "Åtkomst",
+  "repeater_acl.loading": "Laddar...",
+  "repeater_acl.working": "Arbetar...",
+  "repeater_acl.no_users": "Inga användare"
+}

@@ -6,12 +6,22 @@
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/ContactsService.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/RepeaterAclLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <mishmesh/widgets/Modal.h>
 #include <string.h>
 #include <stdio.h>
 
 namespace mishmesh {
+
+static const char* trRepeaterAcl(RepeaterAclTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedRepeaterAclLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedRepeaterAclLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 static const char* roleName(uint8_t p) {
   switch (p & 3) { case 1: return "RO"; case 2: return "RW"; case 3: return "Admin"; default: return "-"; }
@@ -24,15 +34,25 @@ static void hex12(char* out, const uint8_t* pk) {
 
 const char* RepeaterAclApplet::ListModel_::label(int i) const {
   static char buf[24];
-  if (i >= p->_view.count) return "Add user";
+  if (i >= p->_view.count) return trRepeaterAcl(RepeaterAclTextId::RepeaterAclAddUser);
   char h[13]; hex12(h, p->_view.entries[i].pubkey);
   snprintf(buf, sizeof(buf), "%s %s", h, roleName(p->_view.entries[i].perms));
   return buf;
 }
 
 // Level chooser model: Read-only / Read-write / Admin / Remove.
-static const char* const LEVEL_LABELS[] = {"Read-only", "Read-write", "Admin", "Remove"};
-static StaticListModel s_levelModel(LEVEL_LABELS, 4);
+struct AclLevelModel : ListModel {
+  int count() const override { return 4; }
+  const char* label(int i) const override {
+    switch (i) {
+      case 0: return trRepeaterAcl(RepeaterAclTextId::RepeaterAclReadOnly);
+      case 1: return trRepeaterAcl(RepeaterAclTextId::RepeaterAclReadWrite);
+      case 2: return trRepeaterAcl(RepeaterAclTextId::RepeaterAclAdmin);
+      default: return trRepeaterAcl(RepeaterAclTextId::RepeaterAclRemove);
+    }
+  }
+};
+static AclLevelModel s_levelModel;
 static const uint8_t LEVEL_PERMS[4] = {1, 2, 3, 0};   // RO, RW, Admin, Remove(=0)
 
 void RepeaterAclApplet::setTarget(const uint8_t* pubKey, const char* name) {
@@ -95,21 +115,32 @@ int RepeaterAclApplet::onRender(Canvas& c) {
         bool ok = false; const char* resp = nullptr;
         if (_svc->cliResult(_pub, _startSeq, ok, resp)) {
           if (resp && resp[0] == 'O' && resp[1] == 'K') beginFetch();   // re-list
-          else { copyStr(_status, sizeof(_status), resp ? resp : "err"); _op = Op::None; _phase = Phase::List; }
+          else {
+            copyStr(_status, sizeof(_status),
+                    resp ? resp : trRepeaterAcl(RepeaterAclTextId::RepeaterAclError));
+            _op = Op::None; _phase = Phase::List;
+          }
         } else _req.rearm(seq);
       }
     } else if (st == PendingRequest::State::TimedOut) {
-      strncpy(_status, "[no response]", sizeof(_status) - 1); _op = Op::None; _phase = Phase::List;
+      copyStr(_status, sizeof(_status), trRepeaterAcl(RepeaterAclTextId::RepeaterAclNoResponse));
+      _op = Op::None; _phase = Phase::List;
     }
   }
 
-  int bh = drawTopBar(c, _bar, _name[0] ? _name : "Access", _app, w);
+  int bh = drawTopBar(c, _bar,
+                      _name[0] ? _name : trRepeaterAcl(RepeaterAclTextId::RepeaterAclAccess),
+                      _app, w);
   int top = bh + 1, bottom = h - caph - 1;
   if (_phase == Phase::Loading) {
-    c.drawTextCentered(fontBody(), 0, top, w, bottom - top, "Loading...", DisplayDriver::LIGHT);
+    c.drawTextCentered(fontBody(), 0, top, w, bottom - top,
+                       trRepeaterAcl(RepeaterAclTextId::RepeaterAclLoading),
+                       DisplayDriver::LIGHT);
   } else {
     _menu.draw(c, 0, top, w, bottom - top);
-    const char* status = _phase == Phase::Busy ? "Working..." : (_view.count == 0 ? "No users" : _status);
+    const char* status = _phase == Phase::Busy
+        ? trRepeaterAcl(RepeaterAclTextId::RepeaterAclWorking)
+        : (_view.count == 0 ? trRepeaterAcl(RepeaterAclTextId::RepeaterAclNoUsers) : _status);
     c.drawText(cap, 2, bottom, status, DisplayDriver::LIGHT, TextAlign::Left);
   }
   if (_phase == Phase::Level) {

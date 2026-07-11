@@ -1,0 +1,13 @@
+{
+  "repeater_acl.add_user": "Add user",
+  "repeater_acl.read_only": "Read-only",
+  "repeater_acl.read_write": "Read-write",
+  "repeater_acl.admin": "Admin",
+  "repeater_acl.remove": "Remove",
+  "repeater_acl.error": "Error",
+  "repeater_acl.no_response": "[no response]",
+  "repeater_acl.access": "Access",
+  "repeater_acl.loading": "Loading...",
+  "repeater_acl.working": "Working...",
+  "repeater_acl.no_users": "No users"
+}
