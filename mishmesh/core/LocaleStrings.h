@@ -100,6 +100,17 @@ enum class TextId : uint16_t {
   MessagesSettingsDmAcks,
   MessagesSettingsChannelMsgs,
   MessagesSettingsDirectMsgs,
+  AdvertSendZeroHop,
+  AdvertSendFloodRouted,
+  AdvertTabAdvert,
+  AdvertTabRecent,
+  AdvertTabSettings,
+  AdvertEmptyNoAdverts,
+  AdvertToastFloodSent,
+  AdvertToastZeroHopSent,
+  AdvertToastFailed,
+  AdvertSettingsDeviceName,
+  AdvertSettingsSharePosition,
   Count
 };
 
@@ -216,6 +227,17 @@ inline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {
     "DM acks",
     "Channel msgs",
     "Direct msgs",
+    "Zero hop",
+    "Flood routed",
+    "Advert",
+    "Recent",
+    "Settings",
+    "No adverts yet",
+    "Flood advert sent",
+    "Zero-hop advert sent",
+    "Advert failed",
+    "Device name",
+    "Share position",
   };
   static const char* const STRINGS_1[] = {
     "Inställningar",
@@ -311,6 +333,17 @@ inline const char* generatedLocaleString(uint8_t localeIndex, TextId id) {
     "DM-kvittenser",
     "Kanalmeddelanden",
     "Direktmeddelanden",
+    "Noll hopp",
+    "Flood-routad",
+    "Annonsera",
+    "Senaste",
+    "Inställningar",
+    "Inga annonser än",
+    "Flood-annons skickad",
+    "Nollhoppsannons skickad",
+    "Annonsering misslyckades",
+    "Enhetsnamn",
+    "Dela position",
   };
   static const char* const* const TABLES[] = {
     STRINGS_0,

@@ -1,8 +1,5 @@
 {
-  "_meta": {
-    "name": "English",
-    "nativeName": "English"
-  },
+  "_meta": {"name": "English", "nativeName": "English"},
   "app.settings": "Settings",
   "settings.home": "Home",
   "settings.contacts": "Contacts",
@@ -95,5 +92,16 @@
   "messages.settings.quick_replies": "Quick replies",
   "messages.settings.dm_acks": "DM acks",
   "messages.settings.channel_msgs": "Channel msgs",
-  "messages.settings.direct_msgs": "Direct msgs"
+  "messages.settings.direct_msgs": "Direct msgs",
+  "advert.send.zero_hop": "Zero hop",
+  "advert.send.flood_routed": "Flood routed",
+  "advert.tab.advert": "Advert",
+  "advert.tab.recent": "Recent",
+  "advert.tab.settings": "Settings",
+  "advert.empty.no_adverts": "No adverts yet",
+  "advert.toast.flood_sent": "Flood advert sent",
+  "advert.toast.zero_hop_sent": "Zero-hop advert sent",
+  "advert.toast.failed": "Advert failed",
+  "advert.settings.device_name": "Device name",
+  "advert.settings.share_position": "Share position"
 }

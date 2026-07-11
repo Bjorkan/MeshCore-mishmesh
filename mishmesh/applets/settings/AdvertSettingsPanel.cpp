@@ -37,7 +37,8 @@ bool AdvertSettingsPanel::onInput(InputEvent ev) {
       const char* cur = _app->nodeName();
       strncpy(_nameBuf, cur ? cur : "", sizeof(_nameBuf) - 1);   // seed with current name
       _nameBuf[sizeof(_nameBuf) - 1] = 0;
-      keypadApplet().configure(_nameBuf, sizeof(_nameBuf) - 1, "Device name",
+      keypadApplet().configure(_nameBuf, sizeof(_nameBuf) - 1,
+                               tr(TextId::AdvertSettingsDeviceName),
                                &AdvertSettingsPanel::onNameDone, this);
       if (_host) _host->push(&keypadApplet());
     } else {   // SharePosition

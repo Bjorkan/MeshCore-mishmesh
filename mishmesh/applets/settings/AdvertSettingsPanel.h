@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mishmesh/core/SettingsPanel.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/widgets/ListMenu.h>
 
 namespace mishmesh {
@@ -12,7 +13,7 @@ class AppletHost;
 // truth is AppServices (persisted by the adapter).
 class AdvertSettingsPanel : public SettingsPanel {
 public:
-  const char* title() const override { return "Advert"; }
+  const char* title() const override { return tr(TextId::SettingsAdvert); }
   void begin(AppletContext& ctx) override;
   int  renderBody(Canvas& c, int x, int y, int w, int h) override;
   bool onInput(InputEvent ev) override;
@@ -30,7 +31,8 @@ private:
     void bind(AppServices* app) { _app = app; }
     int count() const override { return ROW_COUNT; }
     const char* label(int i) const override {
-      return i == DeviceName ? "Device name" : "Share position";
+      return tr(i == DeviceName ? TextId::AdvertSettingsDeviceName
+                                : TextId::AdvertSettingsSharePosition);
     }
     bool isToggle(int i) const override { return i == SharePosition; }
     bool toggleState(int i) const override {

@@ -5,16 +5,17 @@
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/AppletRegistry.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/core/ContactFormat.h>             // kindIcon / contactLabel / contactFormatAge
 #include <mishmesh/text/Fonts.h>
 #include <stdio.h>
 
 namespace mishmesh {
 
-static const char* const kSendLabel[2] = { "Zero hop", "Flood routed" };
+static const TextId kSendLabel[2] = { TextId::AdvertSendZeroHop, TextId::AdvertSendFloodRouted };
 
 const char* AdvertApplet::SendModel::label(int index) const {
-  return (index >= 0 && index < 2) ? kSendLabel[index] : "";
+  return (index >= 0 && index < 2) ? tr(kSendLabel[index]) : "";
 }
 uint16_t AdvertApplet::SendModel::icon(int index) const {
   return (uint16_t)(index == 1 ? Icon::Radio : Icon::Wifi);   // 0 = local/zero-hop, 1 = network/flood
@@ -48,9 +49,9 @@ void AdvertApplet::onStart(AppletContext& ctx) {
   _recent.bind(_svc, _app);
   advertSettings().begin(ctx);
   _tabs.clear();
-  _tabs.addTab("Advert", (uint16_t)Icon::Radio);
-  _tabs.addTab("Recent", (uint16_t)Icon::Search);
-  _tabs.addTab("Settings", (uint16_t)Icon::Settings);
+  _tabs.addTab(tr(TextId::AdvertTabAdvert), (uint16_t)Icon::Radio);
+  _tabs.addTab(tr(TextId::AdvertTabRecent), (uint16_t)Icon::Search);
+  _tabs.addTab(tr(TextId::AdvertTabSettings), (uint16_t)Icon::Settings);
   _list.setRowHeight(14);
   syncListToTab();
   _list.resetSelection();
@@ -59,7 +60,7 @@ void AdvertApplet::onStart(AppletContext& ctx) {
 void AdvertApplet::syncListToTab() {
   switch (_tabs.selected()) {
     case 0:  _list.setModel(&_send);     _list.setEmptyText(nullptr);            break;
-    case 1:  _list.setModel(&_recent);   _list.setEmptyText("No adverts yet");   break;
+    case 1:  _list.setModel(&_recent);   _list.setEmptyText(tr(TextId::AdvertEmptyNoAdverts));   break;
     default: break;   // Settings tab: rendered by advertSettings(), not _list
   }
 }
@@ -90,8 +91,9 @@ bool AdvertApplet::onInput(InputEvent ev) {
       bool flood = (_list.selected() == 1);
       bool ok = _app && _app->sendAdvert(flood);
       if (_host) {
-        _host->postToast(ok ? (flood ? "Flood advert sent" : "Zero-hop advert sent")
-                            : "Advert failed");
+        _host->postToast(ok ? (flood ? tr(TextId::AdvertToastFloodSent)
+                                      : tr(TextId::AdvertToastZeroHopSent))
+                            : tr(TextId::AdvertToastFailed));
       }
       return true;
     }

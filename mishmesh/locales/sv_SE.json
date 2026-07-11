@@ -1,8 +1,5 @@
 {
-  "_meta": {
-    "name": "Swedish",
-    "nativeName": "Svenska"
-  },
+  "_meta": {"name": "Swedish", "nativeName": "Svenska"},
   "app.settings": "Inställningar",
   "settings.home": "Hem",
   "settings.contacts": "Kontakter",
@@ -95,5 +92,16 @@
   "messages.settings.quick_replies": "Snabbsvar",
   "messages.settings.dm_acks": "DM-kvittenser",
   "messages.settings.channel_msgs": "Kanalmeddelanden",
-  "messages.settings.direct_msgs": "Direktmeddelanden"
+  "messages.settings.direct_msgs": "Direktmeddelanden",
+  "advert.send.zero_hop": "Noll hopp",
+  "advert.send.flood_routed": "Flood-routad",
+  "advert.tab.advert": "Annonsera",
+  "advert.tab.recent": "Senaste",
+  "advert.tab.settings": "Inställningar",
+  "advert.empty.no_adverts": "Inga annonser än",
+  "advert.toast.flood_sent": "Flood-annons skickad",
+  "advert.toast.zero_hop_sent": "Nollhoppsannons skickad",
+  "advert.toast.failed": "Annonsering misslyckades",
+  "advert.settings.device_name": "Enhetsnamn",
+  "advert.settings.share_position": "Dela position"
 }
