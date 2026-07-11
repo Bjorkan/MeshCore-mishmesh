@@ -6,6 +6,8 @@
 #include <mishmesh/applets/settings/RadioPresets.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/OnboardingLocaleStrings.h>
 #include <mishmesh/core/NameValidation.h>
 #include <mishmesh/core/WorldClock.h>
 #include <mishmesh/core/Anim.h>
@@ -14,6 +16,14 @@
 #include <string.h>
 
 namespace mishmesh {
+
+static const char* trOnboarding(OnboardingTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedOnboardingLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedOnboardingLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 bool shouldShowOnboarding(uint8_t state, bool freshIdentity) {
   if (state == 2) return false;   // DONE
@@ -35,13 +45,13 @@ void OnboardingApplet::buildSteps(bool gps) {
 
 const char* OnboardingApplet::stepTitle() const {
   switch (cur()) {
-    case Welcome: return "Welcome";
-    case Name:    return "Device name";
-    case Region:  return "Radio region";
-    case Gps:     return "GPS";
-    case Time:    return "Time";
-    case Done:    return "All set";
-    default:      return "Setup";
+    case Welcome: return trOnboarding(OnboardingTextId::OnboardingTitleWelcome);
+    case Name:    return trOnboarding(OnboardingTextId::OnboardingTitleDeviceName);
+    case Region:  return trOnboarding(OnboardingTextId::OnboardingTitleRadioRegion);
+    case Gps:     return trOnboarding(OnboardingTextId::OnboardingTitleGps);
+    case Time:    return trOnboarding(OnboardingTextId::OnboardingTitleTime);
+    case Done:    return trOnboarding(OnboardingTextId::OnboardingTitleAllSet);
+    default:      return trOnboarding(OnboardingTextId::OnboardingTitleSetup);
   }
 }
 
@@ -88,7 +98,7 @@ void OnboardingApplet::activate(int row) {
   switch (cur()) {
     case Name:
       if (row == 0) {
-        keypadApplet().configure(_name, sizeof(_name) - 1, "Device name", &OnboardingApplet::onNameDone, this);
+        keypadApplet().configure(_name, sizeof(_name) - 1, trOnboarding(OnboardingTextId::OnboardingTitleDeviceName), &OnboardingApplet::onNameDone, this);
         if (_host) _host->push(&keypadApplet());
       } else advance();
       break;
@@ -168,23 +178,23 @@ int OnboardingApplet::count() const {
 
 const char* OnboardingApplet::label(int i) const {
   switch (cur()) {
-    case Name:   return i == 0 ? "Name" : "Next";
+    case Name:   return i == 0 ? trOnboarding(OnboardingTextId::OnboardingName) : trOnboarding(OnboardingTextId::OnboardingNext);
     case Region: return (i >= 0 && i < PRESET_COUNT) ? PRESETS[i].name : "";
-    case Gps:    return i == 0 ? "Enable GPS" : "Next";
+    case Gps:    return i == 0 ? trOnboarding(OnboardingTextId::OnboardingEnableGps) : trOnboarding(OnboardingTextId::OnboardingNext);
     case Time:
-      if (i == 0) return "Time zone";
-      if (i == 1) return "Auto-sync";
-      if (!_autoSync && i == 2) return "Set clock...";
-      return "Next";
+      if (i == 0) return trOnboarding(OnboardingTextId::OnboardingTimeZone);
+      if (i == 1) return trOnboarding(OnboardingTextId::OnboardingAutoSync);
+      if (!_autoSync && i == 2) return trOnboarding(OnboardingTextId::OnboardingSetClock);
+      return trOnboarding(OnboardingTextId::OnboardingNext);
     default: return "";
   }
 }
 
 const char* OnboardingApplet::value(int i) const {
-  if (cur() == Name && i == 0) return _name[0] ? _name : "(unset)";
+  if (cur() == Name && i == 0) return _name[0] ? _name : trOnboarding(OnboardingTextId::OnboardingUnset);
   if (cur() == Time && i == 0) {
     if (_tzCity >= 0 && _tzCity < worldCityCount()) return worldCity(_tzCity).name;
-    return "(set)";
+    return trOnboarding(OnboardingTextId::OnboardingSet);
   }
   return nullptr;
 }
@@ -236,17 +246,17 @@ void OnboardingApplet::drawWelcome(Canvas& c, int x, int y, int w, int h) {
 
   // hold the button back until the logos land, so the first frame matches the splash
   if (!_logoSettling)
-    drawCenterButton(c, x, y + h - (c.fontHeight(fontBody()) + 5), w, "Get started");
+    drawCenterButton(c, x, y + h - (c.fontHeight(fontBody()) + 5), w, trOnboarding(OnboardingTextId::OnboardingGetStarted));
 }
 
 void OnboardingApplet::drawDone(Canvas& c, int x, int y, int w, int h) {
-  c.drawTextEllipsized(fontSubtitle(), x + w / 2, y + 2, w - 6, "You're all set",
+  c.drawTextEllipsized(fontSubtitle(), x + w / 2, y + 2, w - 6, trOnboarding(OnboardingTextId::OnboardingYouAreAllSet),
                        DisplayDriver::LIGHT, TextAlign::Center);
   char line[40];
   const char* region = (_region >= 0 && _region < PRESET_COUNT) ? PRESETS[_region].name : "?";
-  snprintf(line, sizeof(line), "%s / %s", _name[0] ? _name : "(unset)", region);
+  snprintf(line, sizeof(line), "%s / %s", _name[0] ? _name : trOnboarding(OnboardingTextId::OnboardingUnset), region);
   c.drawTextEllipsized(fontBody(), x + w / 2, y + 20, w - 6, line, DisplayDriver::LIGHT, TextAlign::Center);
-  drawCenterButton(c, x, y + h - (c.fontHeight(fontBody()) + 5), w, "Finish");
+  drawCenterButton(c, x, y + h - (c.fontHeight(fontBody()) + 5), w, trOnboarding(OnboardingTextId::OnboardingFinish));
 }
 
 int OnboardingApplet::onRender(Canvas& c) {
