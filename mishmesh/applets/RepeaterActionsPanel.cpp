@@ -5,13 +5,23 @@
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/ContactsService.h>
 #include <mishmesh/core/CliRequest.h>
+#include <mishmesh/core/Locale.h>
+#include <mishmesh/core/RepeaterActionsLocaleStrings.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 #include <stdio.h>
 
 namespace mishmesh {
 
-static const char* const ACTIONS_LABELS[] = {"Send advert", "Sync clock", "Reboot"};
+static const char* trRepeaterActions(RepeaterActionsTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedRepeaterActionsLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedRepeaterActionsLocaleString(0, id);
+  return fallback ? fallback : "";
+}
+
+static const char* ACTIONS_LABELS[] = {nullptr, nullptr, nullptr};
 static StaticListModel s_actionsModel(ACTIONS_LABELS, 3);
 
 void RepeaterActionsPanel::setTarget(const uint8_t* pubKey, const char* name) {
@@ -24,6 +34,9 @@ void RepeaterActionsPanel::onStart(AppletContext& ctx) {
   _app = ctx.app;
   _confirming = false;
   _phase = Phase::Idle;
+  ACTIONS_LABELS[0] = trRepeaterActions(RepeaterActionsTextId::RepeaterActionsSendAdvert);
+  ACTIONS_LABELS[1] = trRepeaterActions(RepeaterActionsTextId::RepeaterActionsSyncClock);
+  ACTIONS_LABELS[2] = trRepeaterActions(RepeaterActionsTextId::RepeaterActionsReboot);
   _menu.setModel(&s_actionsModel);
   _menu.resetSelection();
 }
@@ -47,7 +60,10 @@ void RepeaterActionsPanel::fireSync() {
 
 void RepeaterActionsPanel::fireReboot() {
   if (_svc) _svc->sendCliCommand(_pub, "reboot");   // no reply; session drops
-  if (_host) { _host->postToast("Rebooting..."); _host->pop(); }
+  if (_host) {
+    _host->postToast(trRepeaterActions(RepeaterActionsTextId::RepeaterActionsRebooting));
+    _host->pop();
+  }
 }
 
 int RepeaterActionsPanel::onRender(Canvas& c) {
@@ -55,10 +71,12 @@ int RepeaterActionsPanel::onRender(Canvas& c) {
     bool ok = false; const char* resp = nullptr;
     CliPoll st = cliPoll(_svc, _req, _pub, _startSeq, c.now(), ok, resp);
     if (st == CliPoll::Ready) {
-      if (_host) _host->postToast(resp ? resp : "Done");
+      if (_host) _host->postToast(resp ? resp
+                                      : trRepeaterActions(RepeaterActionsTextId::RepeaterActionsDone));
       _phase = Phase::Idle;
     } else if (st == CliPoll::TimedOut) {
-      if (_host) _host->postToast("[no response]");
+      if (_host) _host->postToast(
+          trRepeaterActions(RepeaterActionsTextId::RepeaterActionsNoResponse));
       _phase = Phase::Idle;
     }
   }
@@ -66,10 +84,14 @@ int RepeaterActionsPanel::onRender(Canvas& c) {
   const int w = c.width(), h = c.height();
   const Font* cap = fontCaption();
   int caph = c.lineHeight(cap);
-  int bh = drawTopBar(c, _bar, _name[0] ? _name : "Actions", _app, w);
+  int bh = drawTopBar(c, _bar,
+                      _name[0] ? _name
+                               : trRepeaterActions(RepeaterActionsTextId::RepeaterActionsActions),
+                      _app, w);
   int top = bh + 1, bottom = h - caph - 1;
   _menu.draw(c, 0, top, w, bottom - top);
-  const char* status = (_phase == Phase::Busy) ? "Working..." : "";
+  const char* status = (_phase == Phase::Busy)
+      ? trRepeaterActions(RepeaterActionsTextId::RepeaterActionsWorking) : "";
   if (status[0]) c.drawText(cap, 2, bottom, status, DisplayDriver::LIGHT, TextAlign::Left);
   if (_confirming) _confirm.draw(c, 0, 0, w, h);
   if (_phase == Phase::Busy) return 150;
@@ -91,7 +113,11 @@ bool RepeaterActionsPanel::onInput(InputEvent ev) {
     switch (_menu.selected()) {
       case ROW_ADVERT: fireAdvert(); return true;
       case ROW_SYNC:   fireSync();   return true;
-      default:         _confirm.configure("Reboot repeater?"); _confirming = true; return true;
+      default:
+        _confirm.configure(
+            trRepeaterActions(RepeaterActionsTextId::RepeaterActionsConfirmReboot));
+        _confirming = true;
+        return true;
     }
   }
   return false;   // Back bubbles
