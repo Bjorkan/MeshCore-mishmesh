@@ -1,7 +1,0 @@
-{
-  "ping_dialog.pinging": "Pingar...",
-  "ping_dialog.no_response": "Inget svar",
-  "ping_dialog.round_trip": "Tur och retur: %u ms",
-  "ping_dialog.snr_us": "SNR hos oss: %.1f dB",
-  "ping_dialog.snr_them": "SNR hos dem: %.1f dB"
-}

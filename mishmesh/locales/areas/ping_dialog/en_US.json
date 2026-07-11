@@ -1,7 +1,0 @@
-{
-  "ping_dialog.pinging": "Pinging...",
-  "ping_dialog.no_response": "No response",
-  "ping_dialog.round_trip": "Round trip: %u ms",
-  "ping_dialog.snr_us": "SNR us: %.1f dB",
-  "ping_dialog.snr_them": "SNR them: %.1f dB"
-}
