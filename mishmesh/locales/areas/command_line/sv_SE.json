@@ -1,0 +1,7 @@
+{
+  "command_line.send_failed": "[kunde inte skicka]",
+  "command_line.no_response": "[inget svar]",
+  "command_line.waiting_reply": "Väntar på svar...",
+  "command_line.select_command": "Select: kommando",
+  "command_line.command": "Kommando"
+}

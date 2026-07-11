@@ -4,11 +4,21 @@
 #include <mishmesh/applets/AppletChrome.h>
 #include <mishmesh/core/AppletHost.h>
 #include <mishmesh/core/Canvas.h>
+#include <mishmesh/core/CommandLineLocaleStrings.h>
+#include <mishmesh/core/Locale.h>
 #include <mishmesh/text/Fonts.h>
 #include <string.h>
 #include <stdio.h>
 
 namespace mishmesh {
+
+static const char* trCommandLine(CommandLineTextId id) {
+  const uint8_t locale = localeManager().currentIndex();
+  const char* translated = generatedCommandLineLocaleString(locale, id);
+  if (translated) return translated;
+  const char* fallback = generatedCommandLineLocaleString(0, id);
+  return fallback ? fallback : "";
+}
 
 void CommandLineApplet::setTarget(const uint8_t* pubKey, const char* name) {
   setTargetFields(_pub, _name, sizeof(_name), pubKey, name);
@@ -83,10 +93,10 @@ void CommandLineApplet::submitCommand(const char* cmd) {
       _req.begin(_cliStartSeq, _host ? _host->nowMs() : 0);
       _pending = true;
     } else {
-      pushLine("[send failed]");
+      pushLine(trCommandLine(CommandLineTextId::CommandLineSendFailed));
     }
   } else {
-    pushLine("[send failed]");
+    pushLine(trCommandLine(CommandLineTextId::CommandLineSendFailed));
   }
   syncView();
   // State changed outside onRender: force the next loop to render (start polling
@@ -115,13 +125,15 @@ int CommandLineApplet::renderBody(Canvas& c, int x, int y, int w, int h) {
         _req.rearm(_svc->cliSeq());
       }
     } else if (s == PendingRequest::State::TimedOut) {
-      pushLine("[no response]");
+      pushLine(trCommandLine(CommandLineTextId::CommandLineNoResponse));
       _pending = false;
       syncView();
     }
   }
 
-  const char* hint = _pending ? "Waiting reply..." : "Select: command";
+  const char* hint = _pending
+      ? trCommandLine(CommandLineTextId::CommandLineWaitingReply)
+      : trCommandLine(CommandLineTextId::CommandLineSelectCommand);
   int bottom = y + h - caph - 1;
   _view.draw(c, x, y, w, bottom - y);
   c.drawText(cap, x + 2, bottom, hint, DisplayDriver::LIGHT, TextAlign::Left);
@@ -135,11 +147,13 @@ bool CommandLineApplet::onInput(InputEvent ev) {
   if (_view.onInput(ev)) return true;        // NavUp/Down scroll the log
   if (ev == InputEvent::Select) {
     if (_pending) {                         // one in-flight request at a time
-      if (_host) _host->postToast("Waiting reply...");
+      if (_host) _host->postToast(
+          trCommandLine(CommandLineTextId::CommandLineWaitingReply));
       return true;
     }
     _cmdBuf[0] = 0;
-    keypadApplet().configure(_cmdBuf, sizeof(_cmdBuf) - 1, "Command",
+    keypadApplet().configure(_cmdBuf, sizeof(_cmdBuf) - 1,
+                             trCommandLine(CommandLineTextId::CommandLineCommand),
                              &CommandLineApplet::onCmdDone, this);
     if (_host) _host->push(&keypadApplet());
     return true;
