@@ -100,6 +100,8 @@ class UITask : public AbstractUITask, public mishmesh::AppServices, public mishm
     void setNotifyLevel(const mishmesh::ConvoKey& k, mishmesh::NotifyLevel lvl) override;
     uint8_t chatSound(const mishmesh::ConvoKey& k) const override;
     void setChatSound(const mishmesh::ConvoKey& k, uint8_t encoded) override;
+    mishmesh::WakeOverride chatWake(const mishmesh::ConvoKey& k) const override;
+    void setChatWake(const mishmesh::ConvoKey& k, mishmesh::WakeOverride v) override;
     mishmesh::MessagesConfig getMessagesConfig() const override;
     void setMessagesConfig(const mishmesh::MessagesConfig& cfg) override;
     mishmesh::ChanResult createPrivateChannel(const char* name) override;
@@ -150,6 +152,7 @@ class UITask : public AbstractUITask, public mishmesh::AppServices, public mishm
   bool        _notifyPending = false;
   UIEventType _notifyEvent = UIEventType::none;
   void dispatchNotification(UIEventType t);
+  bool wakeAllowedFor(const mishmesh::ConvoKey& c) const;
   void applyTimeSyncGate(bool on);
   // [mishmesh] per-minute memo for the DST-aware tz resolver (see tzOffsetMinutes)
   mutable uint32_t _tzCacheMin = 0xFFFFFFFFu;

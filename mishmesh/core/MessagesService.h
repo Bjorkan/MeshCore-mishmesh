@@ -11,6 +11,9 @@ enum class ChanResult : int8_t { Ok, Full, Invalid, Duplicate, Error };
 // Per-chat notification level. All == 0 so an absent/default setting reads as All.
 enum class NotifyLevel : uint8_t { All = 0, MentionsOnly = 1, Mute = 2 };
 
+// Per-chat screen-wake override. Default follows the global MessagesConfig.wakeOnMessage.
+enum class WakeOverride : uint8_t { Default = 0, On = 1, Off = 2 };
+
 // Short label for the ChatMenu "Notifications" row value column.
 inline const char* notifyLevelShortLabel(NotifyLevel lvl) {
   switch (lvl) {
@@ -28,6 +31,7 @@ struct MessagesConfig {
   bool    autoRetry     = false;
   bool    autoResetPath = false;
   uint8_t directAcks    = 1;   // 1 or 2
+  bool    wakeOnMessage = true;   // false = incoming messages don't wake a sleeping screen
 };
 
 struct ConvoView {
@@ -105,6 +109,10 @@ struct MessagesService {
   // non-adapter impls (tests) inert at Default.
   virtual uint8_t chatSound(const ConvoKey& k) const { (void)k; return 0; }
   virtual void setChatSound(const ConvoKey& k, uint8_t encoded) { (void)k; (void)encoded; }
+  // Per-chat screen-wake override (Default follows the global toggle). Adapter-
+  // backed; defaults keep non-adapter impls (tests) inert at Default.
+  virtual WakeOverride chatWake(const ConvoKey& k) const { (void)k; return WakeOverride::Default; }
+  virtual void setChatWake(const ConvoKey& k, WakeOverride v) { (void)k; (void)v; }
   // Global Messages settings. Adapter-backed; defaults keep non-adapter impls
   // (tests) inert at the struct defaults.
   virtual MessagesConfig getMessagesConfig() const { return MessagesConfig(); }

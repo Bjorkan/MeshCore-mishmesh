@@ -100,6 +100,14 @@ struct FakeMessagesService : mishmesh::MessagesService {
   void setChatSound(const mishmesh::ConvoKey& k, uint8_t encoded) override {
     chatSounds[keyName(k)] = encoded;
   }
+  std::map<std::string, mishmesh::WakeOverride> chatWakes;   // per-chat wake override
+  mishmesh::WakeOverride chatWake(const mishmesh::ConvoKey& k) const override {
+    auto it = chatWakes.find(keyName(k));
+    return it == chatWakes.end() ? mishmesh::WakeOverride::Default : it->second;
+  }
+  void setChatWake(const mishmesh::ConvoKey& k, mishmesh::WakeOverride v) override {
+    chatWakes[keyName(k)] = v;
+  }
   bool sendText(const mishmesh::ConvoKey& k, const char* text) override {
     lastSent = text ? text : "";
     lastSentKey = k;

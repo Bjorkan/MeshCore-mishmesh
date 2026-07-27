@@ -343,6 +343,15 @@ void UITask::notify(UIEventType t) {
   // [/mishmesh]
 }
 
+// Per-chat override wins (On/Off); Default follows the global toggle.
+bool UITask::wakeAllowedFor(const mishmesh::ConvoKey& c) const {
+  switch (_msgSvc.chatWake(c)) {
+    case mishmesh::WakeOverride::On:  return true;
+    case mishmesh::WakeOverride::Off: return false;
+    default:                          return _msgSvc.getMessagesConfig().wakeOnMessage;
+  }
+}
+
 void UITask::dispatchNotification(UIEventType t) {
   // [mishmesh] The notification router. Picks the least-intrusive visual level for
   // an incoming message based on what the user is doing, and gates the alert sound
@@ -406,9 +415,18 @@ void UITask::dispatchNotification(UIEventType t) {
   if (!_host) return;
 
   bool atHome = _host->foreground() == _home;
-  if (sleeping || atHome) {
+  if (sleeping) {
+    if (wakeAllowedFor(c)) {
+      mishmesh::notificationApplet().raise(&_msgSvc, c);
+      _host->wakeDisplay();
+      if (_host->foreground() != &mishmesh::notificationApplet())
+        _host->push(&mishmesh::notificationApplet());
+    }
+    // else: stay dark. markNotifiable already updated the unread count, so the
+    // clock/home shows it on the next manual wake. Raising the notification applet
+    // under a dark screen would drop the user into an alert they never saw.
+  } else if (atHome) {
     mishmesh::notificationApplet().raise(&_msgSvc, c);
-    if (sleeping) _host->wakeDisplay();
     if (_host->foreground() != &mishmesh::notificationApplet())
       _host->push(&mishmesh::notificationApplet());
   } else {
@@ -1083,11 +1101,36 @@ void UITask::MsgSvc::setChatSound(const mishmesh::ConvoKey& k, uint8_t encoded) 
   storage->save(key, &encoded, 1);   // 0 (Default) writes a 0 byte that reads back as Default
 }
 
+// Per-chat wake override key: "wkc<idx>" for channels, "wk_<12 hex>" for DMs.
+// Absent value (0) reads back as Default -> follow the global toggle.
+static void wakeStorageKey(const mishmesh::ConvoKey& k, char* buf, size_t n) {
+  if (k.type == 1) snprintf(buf, n, "wkc%u", (unsigned)k.id[0]);
+  else snprintf(buf, n, "wk_%02x%02x%02x%02x%02x%02x",
+                k.id[0], k.id[1], k.id[2], k.id[3], k.id[4], k.id[5]);
+}
+
+mishmesh::WakeOverride UITask::MsgSvc::chatWake(const mishmesh::ConvoKey& k) const {
+  if (!storage) return mishmesh::WakeOverride::Default;
+  char key[20]; wakeStorageKey(k, key, sizeof(key));
+  uint8_t b = 0;
+  uint8_t got = storage->load(key, &b, 1);
+  if (got == 0 || b > (uint8_t)mishmesh::WakeOverride::Off) return mishmesh::WakeOverride::Default;
+  return (mishmesh::WakeOverride)b;
+}
+
+void UITask::MsgSvc::setChatWake(const mishmesh::ConvoKey& k, mishmesh::WakeOverride v) {
+  if (!storage) return;
+  char key[20]; wakeStorageKey(k, key, sizeof(key));
+  uint8_t b = (uint8_t)v;
+  storage->save(key, &b, 1);   // Default writes a 0 byte that reads back as Default
+}
+
 // Global Messages settings. autoRetry/autoResetPath have no firmware mechanism
 // yet, so they live only as a UI bitmask in AppletStorage ("msgcfg"). directAcks
 // maps onto NodePrefs.multi_acks (0 -> 1 ack, 1 -> 2 acks).
 #define MSGCFG_AUTO_RETRY      0x01
 #define MSGCFG_AUTO_RESET_PATH 0x02
+#define MSGCFG_SUPPRESS_WAKE   0x04
 
 mishmesh::MessagesConfig UITask::MsgSvc::getMessagesConfig() const {
   if (!_msgFlagsLoaded) {                 // load the file once, then serve from RAM
@@ -1100,6 +1143,7 @@ mishmesh::MessagesConfig UITask::MsgSvc::getMessagesConfig() const {
   c.autoResetPath = (_msgFlags & MSGCFG_AUTO_RESET_PATH) != 0;
   NodePrefs* p = the_mesh.getNodePrefs();
   c.directAcks = (p && p->multi_acks >= 1) ? 2 : 1;
+  c.wakeOnMessage = (_msgFlags & MSGCFG_SUPPRESS_WAKE) == 0;   // absent bit = wake on (default)
   return c;
 }
 
@@ -1107,6 +1151,7 @@ void UITask::MsgSvc::setMessagesConfig(const mishmesh::MessagesConfig& c) {
   uint8_t flags = 0;
   if (c.autoRetry)     flags |= MSGCFG_AUTO_RETRY;
   if (c.autoResetPath) flags |= MSGCFG_AUTO_RESET_PATH;
+  if (!c.wakeOnMessage) flags |= MSGCFG_SUPPRESS_WAKE;
   if (storage) storage->save("msgcfg", &flags, 1);
   _msgFlags = flags; _msgFlagsLoaded = true;   // keep the cache hot
   NodePrefs* p = the_mesh.getNodePrefs();

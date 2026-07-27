@@ -354,9 +354,10 @@ TEST(MessagesSettingsPanel, ShowsPerTypeSoundRows) {
   mishmesh::AppletContext ctx; ctx.app = &app; ctx.messages = &svc;
   mishmesh::MessagesSettingsPanel panel;
   panel.begin(ctx);
-  // Rows 3/4 = Channel/Direct sound, showing the resolved tone names.
-  EXPECT_STREQ("Silent", panel.rowValueForTest(3));
-  EXPECT_STREQ("Droplet", panel.rowValueForTest(4));
+  // Rows 4/5 = Channel/Direct sound, showing the resolved tone names.
+  // (Row 3 is now Wake on message.)
+  EXPECT_STREQ("Silent", panel.rowValueForTest(4));
+  EXPECT_STREQ("Droplet", panel.rowValueForTest(5));
 }
 
 TEST(SettingsApplet, ListsAllSections) {

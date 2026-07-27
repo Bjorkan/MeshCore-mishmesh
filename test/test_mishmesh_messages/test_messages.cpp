@@ -6,6 +6,7 @@
 #include <mishmesh/applets/MessageThreadApplet.h>
 #include <mishmesh/applets/MessagePathApplet.h>
 #include <mishmesh/applets/ContactsApplet.h>
+#include <mishmesh/applets/settings/MessagesSettingsPanel.h>
 #include <mishmesh/core/AppletHost.h>
 #include "FakeDisplayDriver.h"
 
@@ -51,6 +52,29 @@ TEST(MessagesService, SeqIncrementsOnMutation) {
   uint32_t s0 = svc.seq();
   svc.store.appendInbound(mishmesh::directKey((const uint8_t*)"ALICE!"), "x", 1, 1, 1, 0, nullptr, 0);
   EXPECT_GT(svc.seq(), s0);
+}
+
+TEST(MessagesService, WakeDefaults) {
+  FakeMessagesService svc;
+  EXPECT_TRUE(svc.getMessagesConfig().wakeOnMessage);      // default ON
+  mishmesh::ConvoKey k{}; k.type = 0; k.id[0] = 0x11;
+  EXPECT_EQ(mishmesh::WakeOverride::Default, svc.chatWake(k));   // default = follow global
+  svc.setChatWake(k, mishmesh::WakeOverride::Off);
+  EXPECT_EQ(mishmesh::WakeOverride::Off, svc.chatWake(k));
+}
+
+TEST(MessagesSettingsPanel, WakeOnMessageToggles) {
+  FakeMessagesService svc;                       // default wakeOnMessage == true
+  mishmesh::AppletContext ctx; ctx.messages = &svc;
+  mishmesh::MessagesSettingsPanel& p = mishmesh::messagesSettings();
+  p.begin(ctx);
+  // Row 3 = Wake on message (after Auto retry / Auto reset / DM acks).
+  for (int i = 0; i < 3; i++) EXPECT_TRUE(p.onInput(mishmesh::InputEvent::NavDown));
+  EXPECT_TRUE(svc.getMessagesConfig().wakeOnMessage);
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::Select));       // toggle off
+  EXPECT_FALSE(svc.getMessagesConfig().wakeOnMessage);
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::Select));       // toggle on
+  EXPECT_TRUE(svc.getMessagesConfig().wakeOnMessage);
 }
 
 TEST(MessagesApplet, ListsConversations) {
