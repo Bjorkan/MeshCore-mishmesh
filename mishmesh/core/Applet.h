@@ -171,6 +171,16 @@ struct AppServices {
   // Dev tool: re-trigger the first-boot onboarding wizard (sets onboarding_state to
   // IN_PROGRESS and reboots). Default no-op. Only wired/surfaced in dev builds.
   virtual void resetOnboarding() {}
+  // Battery ADC calibration. batteryCalPercent is the stored trim (50..150,
+  // 100 = none). preview* applies a trim live without persisting (stepper
+  // preview); set* persists + applies. batteryMillivoltsLive is a fresh,
+  // unsmoothed reading for that live preview (batteryMillivolts() above is the
+  // 8s-smoothed value the always-on indicator uses). Defaults keep the
+  // framework companion-agnostic.
+  virtual int      batteryCalPercent() const { return 100; }
+  virtual void     previewBatteryCalibration(int pct) { (void)pct; }
+  virtual void     setBatteryCalibration(int pct) { (void)pct; }
+  virtual uint16_t batteryMillivoltsLive() const { return 0; }
   // [/mishmesh]
 };
 

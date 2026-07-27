@@ -5,6 +5,7 @@
 #include <mishmesh/text/Fonts.h>
 #include <mishmesh/core/SettingsPanel.h>
 #include <mishmesh/applets/settings/AdvertSettingsPanel.h>
+#include <mishmesh/applets/settings/BatterySettingsPanel.h>
 #include "FakeDisplayDriver.h"
 using namespace mishmesh;
 
@@ -266,7 +267,7 @@ TEST(SettingsApplet, SelectPushesDetailWithChosenPanel) {
 
   mishmesh::SettingsApplet menu;
   host.setRoot(&menu);
-  EXPECT_EQ(8, menu.entryCountForTest());  // Home, Contacts, Messages, Advert, Radio, Time, Experimental, System Info
+  EXPECT_EQ(9, menu.entryCountForTest());  // Home, Battery, Contacts, Messages, Advert, Radio, Time, Experimental, System Info
 
   // Row 0 = Home: Select pushes the detail bound to homeSettings().
   host.dispatch(mishmesh::InputEvent::Select);
@@ -275,7 +276,7 @@ TEST(SettingsApplet, SelectPushesDetailWithChosenPanel) {
   host.dispatch(mishmesh::InputEvent::Back);   // pop back to the menu
   EXPECT_EQ(&menu, host.foreground());
 
-  // Row 1 = Contacts.
+  // Row 1 = Battery.
   host.dispatch(mishmesh::InputEvent::NavDown);
   host.dispatch(mishmesh::InputEvent::Select);
   EXPECT_EQ(&mishmesh::settingsDetailApplet(), host.foreground());
@@ -290,7 +291,7 @@ TEST(SettingsApplet, RendersStatusBarHeader) {
   mishmesh::Canvas c(&d);
   menu.onRender(c);
   EXPECT_GT(d.fills.size(), 0u);                 // header + list drew something
-  EXPECT_EQ(8, menu.entryCountForTest());        // Home/Contacts/Messages/Advert/Radio/Time/Experimental/SystemInfo all available
+  EXPECT_EQ(9, menu.entryCountForTest());        // Home/Battery/Contacts/Messages/Advert/Radio/Time/Experimental/SystemInfo all available
 }
 
 #include <mishmesh/applets/settings/SystemInfoPanel.h>
@@ -363,9 +364,9 @@ TEST(SettingsApplet, ListsAllSections) {
   mishmesh::AppletContext ctx;
   mishmesh::AppletHost host(&d, ctx);
   mishmesh::SettingsApplet menu; host.setRoot(&menu);
-  // Home/Contacts/Messages/Advert/Radio/Time/Experimental/System Info. Bluetooth
+  // Home/Battery/Contacts/Messages/Advert/Radio/Time/Experimental/System Info. Bluetooth
   // moved to the home-screen quick toggle, so it is no longer a settings section.
-  EXPECT_EQ(8, menu.entryCountForTest());
+  EXPECT_EQ(9, menu.entryCountForTest());
 }
 
 TEST(SettingsPanelLifecycle, DetailAppletCallsOnHideOnStop) {
@@ -440,16 +441,83 @@ TEST(ExperimentalSettingsPanel, SingletonIsStable) {
   EXPECT_EQ(&mishmesh::experimentalSettings(), &mishmesh::experimentalSettings());
 }
 
+namespace {
+struct FakeBattApp : mishmesh::AppServices {
+  int cal = 100, previewed = 100, saved = 100;
+  const char* nodeName() const override { return "n"; }
+  uint16_t batteryMillivolts() const override { return 3800; }
+  uint16_t batteryMillivoltsLive() const override { return 3800; }
+  uint32_t epochSeconds() const override { return 0; }
+  int  batteryCalPercent() const override { return cal; }
+  void previewBatteryCalibration(int p) override { previewed = p; }
+  void setBatteryCalibration(int p) override { saved = p; cal = p; }
+};
+}
+
+TEST(BatterySettingsPanel, DisplayStepperSetsMode) {
+  mishmesh::uiPrefs().resetForTest();
+  mishmesh::uiPrefs().begin(nullptr);
+  FakeBattApp app;
+  mishmesh::AppletContext ctx; ctx.app = &app;
+  mishmesh::BatterySettingsPanel& p = mishmesh::batterySettings();
+  p.begin(ctx);
+  EXPECT_STREQ("Battery", p.title());
+  // Row 0 = Display: Select opens a modal stepper seeded at the current mode (Gauge).
+  EXPECT_EQ(mishmesh::UiPrefs::BattMode::Gauge, mishmesh::uiPrefs().battMode());
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::Select));
+  EXPECT_TRUE(p.modalActive());
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::NavRight));   // Gauge -> Percent
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::NavRight));   // Percent -> Voltage
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::Select));     // confirm
+  EXPECT_FALSE(p.modalActive());
+  EXPECT_EQ(mishmesh::UiPrefs::BattMode::Voltage, mishmesh::uiPrefs().battMode());
+  // Cancel leaves the mode unchanged.
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::Select));     // reopen, seeded at Voltage
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::NavLeft));    // stage Percent
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::Cancel));     // bail
+  EXPECT_FALSE(p.modalActive());
+  EXPECT_EQ(mishmesh::UiPrefs::BattMode::Voltage, mishmesh::uiPrefs().battMode());
+}
+
+TEST(BatterySettingsPanel, CalibrationStepperPreviewsAndConfirms) {
+  mishmesh::uiPrefs().resetForTest();
+  mishmesh::uiPrefs().begin(nullptr);
+  FakeBattApp app;
+  mishmesh::AppletContext ctx; ctx.app = &app;
+  mishmesh::BatterySettingsPanel& p = mishmesh::batterySettings();
+  p.begin(ctx);
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::NavDown));   // -> row 1 (Calibration)
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::Select));    // open stepper at 100
+  EXPECT_TRUE(p.modalActive());
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::NavRight));  // 100 -> 101, previews live
+  EXPECT_EQ(101, app.previewed);
+  EXPECT_EQ(100, app.saved);                                // not persisted yet
+  EXPECT_TRUE(p.onInput(mishmesh::InputEvent::Select));    // confirm
+  EXPECT_FALSE(p.modalActive());
+  EXPECT_EQ(101, app.saved);
+}
+
 TEST(SettingsApplet, ExperimentalSectionPushesPanel) {
   FakeDisplayDriver d;
   mishmesh::AppletContext ctx;
   mishmesh::AppletHost host(&d, ctx);
   mishmesh::SettingsApplet menu;
   host.setRoot(&menu);
-  EXPECT_EQ(8, menu.entryCountForTest());
+  EXPECT_EQ(9, menu.entryCountForTest());
 
-  // Experimental is index 6 (after Home,Contacts,Messages,Advert,Radio,Time).
-  for (int i = 0; i < 6; i++) host.dispatch(mishmesh::InputEvent::NavDown);
+  // Experimental is index 7 (after Home,Battery,Contacts,Messages,Advert,Radio,Time).
+  for (int i = 0; i < 7; i++) host.dispatch(mishmesh::InputEvent::NavDown);
+  host.dispatch(mishmesh::InputEvent::Select);
+  EXPECT_EQ(&mishmesh::settingsDetailApplet(), host.foreground());
+}
+
+TEST(SettingsApplet, BatterySectionPushesPanel) {
+  FakeDisplayDriver d;
+  mishmesh::AppletContext ctx;
+  mishmesh::AppletHost host(&d, ctx);
+  mishmesh::SettingsApplet menu;
+  host.setRoot(&menu);
+  host.dispatch(mishmesh::InputEvent::NavDown);   // Home -> Battery (index 1)
   host.dispatch(mishmesh::InputEvent::Select);
   EXPECT_EQ(&mishmesh::settingsDetailApplet(), host.foreground());
 }

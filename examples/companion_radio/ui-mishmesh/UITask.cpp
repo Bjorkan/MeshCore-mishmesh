@@ -260,6 +260,7 @@ void UITask::begin(DisplayDriver* display, SensorManager* sensors, NodePrefs* no
   ctx.storage = &_theStorage;
   mishmesh::quickReplyStore().begin(&_theStorage);   // load canned replies
   mishmesh::uiPrefs().begin(&_theStorage);   // battery style + home shortcuts
+  mishmeshBatteryCalFactor = mishmesh::uiPrefs().battCalPercent() / 100.0f;   // apply persisted trim
   mishmesh::clockService().begin(&_theStorage);   // alarm / world cities / timer duration
   ctx.sound = &_sound;          // [mishmesh]
   // [/mishmesh]

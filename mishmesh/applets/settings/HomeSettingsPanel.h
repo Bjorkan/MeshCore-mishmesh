@@ -38,7 +38,7 @@ private:
 
 QuickActionPickerPanel& quickActionPicker();
 
-// Home-face settings: battery display style and the two shortcut slots.
+// Home-face settings: screen sleep, the two shortcut slots, and screen brightness.
 class HomeSettingsPanel : public SettingsPanel {
 public:
   const char* title() const override { return "Home"; }
@@ -50,11 +50,9 @@ public:
 private:
   struct Model : ListModel {
     AppServices* app = nullptr;
-    enum Row : int { BattPercent, ScreenSleep, LeftAction, RightAction, ScreenBrightness, ROW_COUNT };
+    enum Row : int { ScreenSleep, LeftAction, RightAction, ScreenBrightness, ROW_COUNT };
     int count() const override { return app && app->screenBrightnessSupported() ? ROW_COUNT : ROW_COUNT - 1; }
     const char* label(int i) const override;
-    bool isToggle(int i) const override { return i == BattPercent; }
-    bool toggleState(int i) const override;
     const char* value(int i) const override;   // shortcut labels + sleep label
   } _model;
 

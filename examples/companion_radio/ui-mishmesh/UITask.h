@@ -23,6 +23,7 @@
 #include <mishmesh/core/WorldClock.h>
 #include <mishmesh/core/MessagesService.h>
 #include <mishmesh/core/AppletStorage.h>
+#include <mishmesh/core/UiPrefs.h>
 #include <mishmesh/core/RetryEngine.h>
 #include <mishmesh/core/ScreenSleep.h>
 #include <mishmesh/core/NameValidation.h>
@@ -34,6 +35,8 @@
 #include <mishmesh/core/ExtraFsMsgBackend.h>
 #include <mishmesh/applets/OnboardingApplet.h>
 // [/mishmesh]
+
+extern float mishmeshBatteryCalFactor;   // defined in WioTrackerL1Board.cpp
 
 class UITask : public AbstractUITask, public mishmesh::AppServices, public mishmesh::ContactsService {
   DisplayDriver* _display;
@@ -250,6 +253,16 @@ public:
     p->path_hash_mode = mode;
     the_mesh.savePrefs();
   }
+  int batteryCalPercent() const override { return mishmesh::uiPrefs().battCalPercent(); }
+  void previewBatteryCalibration(int pct) override {
+    if (pct < 50) pct = 50; else if (pct > 150) pct = 150;
+    mishmeshBatteryCalFactor = pct / 100.0f;                 // live only, no persist
+  }
+  void setBatteryCalibration(int pct) override {
+    mishmesh::uiPrefs().setBattCalPercent(pct);              // clamps + persists
+    mishmeshBatteryCalFactor = mishmesh::uiPrefs().battCalPercent() / 100.0f;
+  }
+  uint16_t batteryMillivoltsLive() const override { return getBattMilliVolts(); }
   void setSoundVolume(uint8_t level) override {
     _sound.setVolume((mishmesh::sound::VolumeLevel)level);
     NodePrefs* p = the_mesh.getNodePrefs();

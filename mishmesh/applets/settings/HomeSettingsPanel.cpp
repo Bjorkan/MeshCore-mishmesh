@@ -68,12 +68,8 @@ static void brightnessStepLabel(int idx, char* out, uint16_t cap) {
 
 const char* HomeSettingsPanel::Model::label(int i) const {
   static const char* const LABELS[ROW_COUNT] = {
-    "Battery percent", "Screen sleep", "Left shortcut", "Right shortcut", "Screen brightness" };
+    "Screen sleep", "Left shortcut", "Right shortcut", "Screen brightness" };
   return (i >= 0 && i < ROW_COUNT) ? LABELS[i] : "";
-}
-
-bool HomeSettingsPanel::Model::toggleState(int i) const {
-  return i == BattPercent && uiPrefs().battShowPercent();
 }
 
 const char* HomeSettingsPanel::Model::value(int i) const {
@@ -133,9 +129,7 @@ bool HomeSettingsPanel::onInput(InputEvent ev) {
   if (_list.onInput(ev)) return true;
   if (ev == InputEvent::Select) {
     int i = _list.selected();
-    if (i == Model::BattPercent) {
-      uiPrefs().setBattShowPercent(!uiPrefs().battShowPercent());
-    } else if (i == Model::ScreenSleep) {
+    if (i == Model::ScreenSleep) {
       if (_model.app) {
         _stepper.configure("Screen sleep", _model.app->screenSleepIndex(),
                            0, SCREEN_SLEEP_COUNT - 1, sleepStepLabel);
