@@ -9,6 +9,12 @@ its heading with `## v<version>`.
 
 ## Unreleased
 
+## v1.2.0
+- Pomodoro timer added to the Clock app.
+- "Wake screen on message" configuration (global + per-chat override).
+- Battery settings panel with battery display style (gauge, percentage, voltage) and ADC calibration.
+- Screen brightness control (thanks @Bjorkan).
+
 ## v1.1.0
 - Configurable path hash size, in Experimental settings.
 - System Info now shows the node's public key.
