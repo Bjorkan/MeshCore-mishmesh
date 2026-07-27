@@ -3,6 +3,7 @@
 #include <mishmesh/core/UiPrefs.h>
 #include <mishmesh/text/Fonts.h>
 #include "FakeDisplayDriver.h"
+#include <cmath>
 
 using namespace mishmesh;
 
@@ -178,6 +179,56 @@ TEST(CanvasRoundRect, FillSmallFallsBackToPlainRect) {
   EXPECT_EQ(4, d.fills[0].y);
   EXPECT_EQ(2, d.fills[0].w);
   EXPECT_EQ(2, d.fills[0].h);
+}
+
+TEST(CanvasArc, FullRingLightsCardinalPointsNotCenter) {
+  FakeDisplayDriver d(64, 64);
+  Canvas c(&d);
+  c.drawArc(32, 32, 20, 1, 0, 360, DisplayDriver::LIGHT);
+  EXPECT_TRUE(d.hasLit(32, 12));   // top    (cy - r)
+  EXPECT_TRUE(d.hasLit(52, 32));   // right  (cx + r)
+  EXPECT_TRUE(d.hasLit(32, 52));   // bottom (cy + r)
+  EXPECT_TRUE(d.hasLit(12, 32));   // left   (cx - r)
+  EXPECT_FALSE(d.hasLit(32, 32));  // center stays clear
+}
+
+TEST(CanvasArc, TopRightQuadrantOnly) {
+  FakeDisplayDriver d(64, 64);
+  Canvas c(&d);
+  c.drawArc(32, 32, 20, 1, 0, 90, DisplayDriver::LIGHT);  // top -> right
+  EXPECT_TRUE(d.hasLit(32, 12));    // top
+  EXPECT_TRUE(d.hasLit(52, 32));    // right
+  EXPECT_FALSE(d.hasLit(32, 52));   // bottom not drawn
+  EXPECT_FALSE(d.hasLit(12, 32));   // left not drawn
+}
+
+TEST(CanvasArc, ThicknessStaysWithinRadialBand) {
+  FakeDisplayDriver d(64, 64);
+  Canvas c(&d);
+  c.drawArc(32, 32, 20, 3, 0, 360, DisplayDriver::LIGHT);
+  // Every lit pixel is within [r-thickness, r] of center (allow 1px rounding slop).
+  for (auto& p : d.litPixels) {
+    double dist = std::sqrt(double((p.first-32)*(p.first-32) + (p.second-32)*(p.second-32)));
+    EXPECT_GE(dist, 20 - 3 - 1.0);
+    EXPECT_LE(dist, 20 + 1.0);
+  }
+}
+
+TEST(CanvasArc, OuterEdgeHasNoGaps) {
+  FakeDisplayDriver d(64, 64);
+  Canvas c(&d);
+  c.drawArc(32, 32, 20, 1, 0, 360, DisplayDriver::LIGHT);
+  auto lit = [&](int x, int y) { return d.hasLit(x, y); };
+  for (auto& p : d.litPixels) {
+    int x = p.first, y = p.second;
+    bool neighbor = false;
+    for (int dy = -1; dy <= 1 && !neighbor; dy++)
+      for (int dx = -1; dx <= 1; dx++) {
+        if (dx == 0 && dy == 0) continue;
+        if (lit(x + dx, y + dy)) { neighbor = true; break; }
+      }
+    EXPECT_TRUE(neighbor) << "isolated pixel at " << x << "," << y;
+  }
 }
 
 int main(int argc, char** argv) {

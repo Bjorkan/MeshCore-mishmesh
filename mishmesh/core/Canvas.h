@@ -102,6 +102,14 @@ public:
   // use for small regions or a scrim, not large solid fills.
   void fillStipple(int x, int y, int w, int h, DisplayDriver::Color c);
 
+  // Arc band for the Pomodoro session ring: plots pixels from radius r inward by
+  // `thickness` px, sweeping startDeg..endDeg where 0deg = top and angle grows
+  // clockwise. Pixels are emitted as 1x1 fills (the panel has no circle/line op),
+  // so keep radii small and call at low frame rates. No-op when endDeg <= startDeg
+  // (empty or reversed range).
+  void drawArc(int cx, int cy, int r, int thickness, int startDeg, int endDeg,
+               DisplayDriver::Color color);
+
   // Blit a full-screen column-major 1bpp buffer to the panel (device coords). See
   // DisplayDriver::blitColumnMajor1bpp. Intended for full-frame sources (e.g. a game).
   void blit1bpp(const uint8_t* buf, int w, int h);

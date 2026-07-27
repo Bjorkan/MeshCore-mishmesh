@@ -1,6 +1,7 @@
 #include <mishmesh/core/Canvas.h>
 #include <mishmesh/core/UiPrefs.h>
 #include <mcufont.h>
+#include <math.h>
 
 namespace mishmesh {
 
@@ -283,6 +284,26 @@ void Canvas::fillStipple(int x, int y, int w, int h, DisplayDriver::Color c) {
   for (int j = 0; j < h; j++)
     for (int i = ((phase + j) & 1); i < w; i += 2)
       _d->fillRect(_ox + x + i, _oy + y + j, 1, 1);
+}
+
+void Canvas::drawArc(int cx, int cy, int r, int thickness, int startDeg,
+                     int endDeg, DisplayDriver::Color color) {
+  if (r <= 0 || thickness <= 0 || endDeg <= startDeg) return;
+  if (thickness > r) thickness = r;   // rr = r - t must not cross the center
+  // Angular step fine enough that the outer edge has no gaps (arc length per
+  // step <= ~1px): d(theta) ~ 1/r radians.
+  const double stepRad = 1.0 / (double)r;
+  const double a0 = startDeg * M_PI / 180.0;
+  const double a1 = endDeg   * M_PI / 180.0;
+  for (double a = a0; a <= a1; a += stepRad) {
+    double s = sin(a), co = cos(a);
+    for (int t = 0; t < thickness; t++) {
+      int rr = r - t;
+      int x = cx + (int)lround(rr * s);   // 0deg = top, clockwise
+      int y = cy - (int)lround(rr * co);
+      fillRect(x, y, 1, 1, color);        // 1x1 => FakeDisplayDriver logs a litPixel
+    }
+  }
 }
 
 void Canvas::blit1bpp(const uint8_t* buf, int w, int h) {
