@@ -169,6 +169,11 @@ const description =
         <li><b>Time &amp; date</b> - timezone by city (DST-aware), 12 / 24h, date format with a live example, auto time-sync, and manual set.</li>
         <li><b>System Info</b> - heap and storage, contact count, battery, uptime, both version numbers, your public key, and two tiers of factory reset.</li>
       </ul>
+      <p>Most panels drill one level deeper. Battery is a good example: pick how the indicator reads, then step the calibration trim - the modal shows the live voltage next to the percent, so you can dial it against a multimeter.</p>
+      <ShotRow>
+        <Screenshot src="assets/img/settings_battery.png" alt="battery settings panel" caption="Battery: display style and trim." />
+        <Screenshot src="assets/img/settings_battery_cal.png" alt="battery calibration stepper with live voltage" caption="Calibration, with live voltage." />
+      </ShotRow>
       <h3>Experimental</h3>
       <p>One drawer for the low-level knobs. Today it holds Path hash size.</p>
       <Tip label="Path hash"><p>Path hash size trades hop capacity for routing precision. <b>1 byte is the safe default</b>; 2 or 3 bytes need repeaters running firmware 1.14 or newer, and each extra byte cuts how many hops a path can hold.</p></Tip>
