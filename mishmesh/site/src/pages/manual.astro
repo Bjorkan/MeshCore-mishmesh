@@ -128,14 +128,23 @@ const description =
     <section class="sec" id="clock">
       <span class="head">Clock &amp; Airtime</span>
       <h3>Clock</h3>
-      <p>Five tabs - Stopwatch, Timer, Alarm, World clock, and Settings. Time runs in the background, so a stopwatch or timer keeps counting after you leave the app, and a timer rings even from another screen.</p>
+      <p>Six tabs - Stopwatch, Timer, Pomodoro, Alarm, World clock, and Settings. Time runs in the background, so a stopwatch, timer or Pomodoro block keeps counting after you leave the app, and a timer or Pomodoro phase rings even from another screen.</p>
       <ShotRow>
         <Screenshot src="assets/img/clock_stopwatch.png" alt="stopwatch tab" caption="Stopwatch." />
         <Screenshot src="assets/img/clock_timer.png" alt="timer tab" caption="Timer." />
         <Screenshot src="assets/img/clock_alarm.png" alt="alarm tab" caption="Alarm." />
         <Screenshot src="assets/img/clock_world.png" alt="world clock tab" caption="World clock." />
       </ShotRow>
-      <Tip label="Gesture"><p>Long-press <kbd>Select</kbd> to reset the stopwatch or timer. On the world clock, long-press a city to remove it.</p></Tip>
+      <Tip label="Gesture"><p>Long-press <kbd>Select</kbd> to reset the stopwatch, timer or Pomodoro. On the world clock, long-press a city to remove it.</p></Tip>
+
+      <h3>Pomodoro</h3>
+      <p>The Pomodoro tab runs the focus-and-break cycle: a ring of segments tracks the set, filling as each focus block completes, with the tomato marking focus and a coffee cup marking the breaks. <b>Select</b> starts and pauses; the phase rings and rolls into the next one on its own.</p>
+      <ShotRow>
+        <Screenshot src="assets/img/clock_pomodoro.png" alt="pomodoro ready screen" caption="Ready - the empty set ring." />
+        <Screenshot src="assets/img/clock_pomodoro_run.png" alt="pomodoro focus block running" caption="Mid-focus, the ring filling." />
+        <Screenshot src="assets/img/clock_pomodoro_setup.png" alt="pomodoro setup list" caption="Setup: durations and set size." />
+      </ShotRow>
+      <Tip label="Setup"><p>Long-press <kbd>Select</kbd> on the Ready screen to open setup: focus length, short and long break, how many focus blocks make a set, and whether phases auto-advance or wait for a press.</p></Tip>
 
       <h3>Airtime</h3>
       <p>Airtime keeps you legal on the band. The Budget tab shows how much of your transmit allowance is free, plus lifetime and last-hour air time. The History tab charts TX and RX over the last hour against a dashed per-minute duty-cycle ceiling.</p>
