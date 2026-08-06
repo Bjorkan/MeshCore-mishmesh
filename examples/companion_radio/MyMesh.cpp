@@ -1086,6 +1086,35 @@ bool MyMesh::uiAddDiscovery(const uint8_t* pubkey) {
   return false;
 }
 
+// [mishmesh]
+#define CTL_TYPE_NODE_DISCOVER_REQ   0x80
+#define CTL_TYPE_NODE_DISCOVER_RESP  0x90
+
+void MyMesh::uiStartNodeDiscover(uint8_t advTypeMask) {
+  _ui_discover_result_count = 0;
+  uint8_t data[10];
+  data[0] = CTL_TYPE_NODE_DISCOVER_REQ;   // low bit = prefix_only = 0 -> full pubkey in replies
+  data[1] = advTypeMask;                  // 1<<ADV_TYPE_REPEATER (0x04) or 1<<ADV_TYPE_SENSOR (0x10)
+  getRNG()->random(&data[2], 4);          // tag
+  memcpy(&_ui_discover_tag, &data[2], 4);
+  uint32_t since = 0;
+  memcpy(&data[6], &since, 4);
+  _ui_discover_until = futureMillis(DISCOVER_WINDOW_MS);
+  auto pkt = createControlData(data, sizeof(data));
+  if (pkt) sendZeroHop(pkt);
+}
+
+bool MyMesh::uiDiscoverScanning() {
+  return _ui_discover_tag != 0 && !millisHasNowPassed(_ui_discover_until);
+}
+
+bool MyMesh::uiGetDiscoverResult(int i, UiDiscoverResult& out) const {
+  if (i < 0 || i >= _ui_discover_result_count) return false;
+  out = _ui_discover_results[i];
+  return true;
+}
+// [/mishmesh]
+
 bool MyMesh::mishmeshSendText(const mishmesh::ConvoKey& k, const char* text) {
   return mishmeshSendText(k, text, nullptr);
 }
@@ -1333,6 +1362,41 @@ void MyMesh::onControlDataRecv(mesh::Packet *packet) {
   } else {
     MESH_DEBUG_PRINTLN("onControlDataRecv(), data received while app offline");
   }
+
+  // [mishmesh] Latch active node-discovery responses for the on-device Discover
+  // screen. A NODE_DISCOVER_RESP is (0x90 | node_type); match the echoed tag to our
+  // pending request and record pubkey + our-side SNR. Also feed the shared discovery
+  // pool so the existing add path / Contacts Discover tab surface it.
+  if ((packet->payload[0] & 0xF0) == CTL_TYPE_NODE_DISCOVER_RESP
+      && packet->payload_len >= 6 + PUB_KEY_SIZE
+      && _ui_discover_tag != 0 && !millisHasNowPassed(_ui_discover_until)) {
+    uint32_t tag;
+    memcpy(&tag, &packet->payload[2], 4);
+    if (tag == _ui_discover_tag) {
+      const uint8_t* pubkey = &packet->payload[6];
+      mesh::Identity id(pubkey);
+      bool dup = false;
+      for (int i = 0; i < _ui_discover_result_count; i++)
+        if (memcmp(_ui_discover_results[i].pubkey, pubkey, PUB_KEY_SIZE) == 0) { dup = true; break; }
+      if (!id.matches(self_id) && !dup && _ui_discover_result_count < UI_MAX_DISCOVER_RESULTS) {
+        UiDiscoverResult& r = _ui_discover_results[_ui_discover_result_count++];
+        memcpy(r.pubkey, pubkey, PUB_KEY_SIZE);
+        r.type = packet->payload[0] & 0x0F;
+        r.snrX4 = (int8_t)(_radio->getLastSNR() * 4);
+        _ui_discover_seq++;
+
+        ContactInfo ci;
+        memset(&ci, 0, sizeof(ci));
+        ci.id = id;
+        ci.out_path_len = OUT_PATH_UNKNOWN;   // name stays empty (memset above) until an advert names it
+        ci.type = r.type;
+        ci.last_advert_timestamp = getRTCClock()->getCurrentTime();
+        ci.lastmod = ci.last_advert_timestamp;
+        uiNoteDiscovery(ci);
+      }
+    }
+  }
+  // [/mishmesh]
 }
 
 void MyMesh::onRawDataRecv(mesh::Packet *packet) {

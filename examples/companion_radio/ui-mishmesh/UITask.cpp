@@ -631,6 +631,23 @@ bool UITask::getDiscovered(int index, mishmesh::ContactView& out) const {
 }
 bool UITask::addDiscovered(const uint8_t* pk) { return the_mesh.uiAddDiscovery(pk); }
 
+bool UITask::startNodeDiscover(uint8_t advTypeMask) {
+  the_mesh.uiStartNodeDiscover(advTypeMask);
+  return true;
+}
+uint32_t UITask::discoverSeq() const { return the_mesh.uiDiscoverSeq(); }
+bool UITask::discoverScanning() const { return the_mesh.uiDiscoverScanning(); }
+int UITask::discoverResultCount() const { return the_mesh.uiDiscoverResultCount(); }
+bool UITask::getDiscoverResult(int i, mishmesh::ContactsService::DiscoverResultView& out) const {
+  MyMesh::UiDiscoverResult r;
+  if (!the_mesh.uiGetDiscoverResult(i, r)) return false;
+  memcpy(_discoverKey, r.pubkey, mishmesh::PUBKEY_LEN);
+  out.pubKey = _discoverKey;
+  out.type = r.type;
+  out.snrX4 = r.snrX4;
+  return true;
+}
+
 // [mishmesh]
 int UITask::countRecentAdverts() const { return the_mesh.uiRecentAdvertCount(); }
 bool UITask::getRecentAdvert(int index, mishmesh::ContactView& out) const {

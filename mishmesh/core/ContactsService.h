@@ -123,6 +123,21 @@ struct ContactsService {
   virtual bool getDiscovered(int index, ContactView& out) const = 0;
   virtual bool addDiscovered(const uint8_t* pubKey) = 0;   // promote to a real contact
 
+  // [mishmesh] Active node discovery (NODE_DISCOVER_REQ/RESP, firmware v1.10+).
+  // startNodeDiscover broadcasts a zero-hop request filtered to advTypeMask
+  // (1<<ADV_TYPE_*); replies land in a session result list (carries SNR) and the
+  // shared discovered pool. discoverSeq() bumps per accepted reply; discoverScanning()
+  // is true during the request window. getDiscoverResult's pubKey points at
+  // adapter-owned storage stable until the next call. Non-pure so host fakes and other
+  // implementers keep compiling.
+  struct DiscoverResultView { const uint8_t* pubKey; uint8_t type; int8_t snrX4; };
+  virtual bool     startNodeDiscover(uint8_t advTypeMask) { (void)advTypeMask; return false; }
+  virtual uint32_t discoverSeq() const { return 0; }
+  virtual bool     discoverScanning() const { return false; }
+  virtual int      discoverResultCount() const { return 0; }
+  virtual bool     getDiscoverResult(int i, DiscoverResultView& out) const { (void)i; (void)out; return false; }
+  // [/mishmesh]
+
   // [mishmesh] Recent adverts: every advert heard (incl. known contacts), newest
   // first. Non-pure so existing implementers/fakes need not override. isContact
   // lets the Recent row route to the contact vs discover detail screen.

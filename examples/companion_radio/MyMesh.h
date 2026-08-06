@@ -206,6 +206,22 @@ public:
   int  uiRecentAdvertCount();
   bool uiGetRecentAdvert(int index, ContactInfo& out);
   // [/mishmesh]
+
+  // [mishmesh] Active node discovery (NODE_DISCOVER_REQ/RESP, firmware v1.10+).
+  // uiStartNodeDiscover broadcasts a zero-hop request filtered to advTypeMask
+  // (1<<ADV_TYPE_*); matching direct neighbours reply into _ui_discover_results (this
+  // session, carries SNR) and the shared discovery pool (uiNoteDiscovery, so the
+  // existing add path / Contacts Discover tab surface them).
+  static const int UI_MAX_DISCOVER_RESULTS = 16;
+  static const uint32_t DISCOVER_WINDOW_MS = 12000;
+  struct UiDiscoverResult { uint8_t pubkey[PUB_KEY_SIZE]; uint8_t type; int8_t snrX4; };
+  void     uiStartNodeDiscover(uint8_t advTypeMask);
+  uint32_t uiDiscoverSeq() const { return _ui_discover_seq; }
+  bool     uiDiscoverScanning();                 // non-const: reads the clock
+  int      uiDiscoverResultCount() const { return _ui_discover_result_count; }
+  bool     uiGetDiscoverResult(int i, UiDiscoverResult& out) const;
+  // [/mishmesh]
+
   void uiSetMessageStore(mishmesh::MessageStore* s) { _mm_store = s; }
   DataStore* getStore() const { return _store; }
   // On-device send mirroring CMD_SEND_TXT_MSG: DM (k.type==0) or channel (k.type==1).
@@ -385,6 +401,13 @@ private:
   ContactInfo _ui_discoveries[UI_MAX_DISCOVERIES];
   int _ui_discovery_count = 0;
   void uiNoteDiscovery(const ContactInfo& ci);   // called from onDiscoveredContact
+  // [mishmesh] active node-discovery session state
+  uint32_t _ui_discover_tag = 0;
+  uint32_t _ui_discover_until = 0;
+  uint32_t _ui_discover_seq = 0;
+  UiDiscoverResult _ui_discover_results[UI_MAX_DISCOVER_RESULTS];
+  int _ui_discover_result_count = 0;
+  // [/mishmesh]
   // [mishmesh]
   ContactInfo _ui_recent_adverts[UI_MAX_RECENT_ADVERTS];
   int _ui_recent_advert_count = 0;

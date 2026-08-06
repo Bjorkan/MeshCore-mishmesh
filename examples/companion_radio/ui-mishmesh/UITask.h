@@ -53,6 +53,7 @@ class UITask : public AbstractUITask, public mishmesh::AppServices, public mishm
   mutable uint32_t _heap_min = 0;   // free-heap low watermark; nRF52 has no built-in one
 
   mutable ContactInfo _scratch;     // backs the ContactView returned by getByKind
+  mutable uint8_t _discoverKey[mishmesh::PUBKEY_LEN];   // stable storage for getDiscoverResult().pubKey
 
   static void fillView(const ContactInfo& c, mishmesh::ContactView& out);
 
@@ -448,6 +449,11 @@ public:
   int  countDiscovered() const override;
   bool getDiscovered(int index, mishmesh::ContactView& out) const override;
   bool addDiscovered(const uint8_t* pubKey) override;
+  bool     startNodeDiscover(uint8_t advTypeMask) override;
+  uint32_t discoverSeq() const override;
+  bool     discoverScanning() const override;
+  int      discoverResultCount() const override;
+  bool     getDiscoverResult(int i, mishmesh::ContactsService::DiscoverResultView& out) const override;
   // [mishmesh]
   int  countRecentAdverts() const override;
   bool getRecentAdvert(int index, mishmesh::ContactView& out) const override;
