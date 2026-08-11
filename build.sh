@@ -96,7 +96,7 @@ get_pio_envs_ending_with_string() {
 # $1 should be the environment name
 get_platform_for_env() {
   local env_name=$1
-  echo "$PIO_CONFIG_JSON" | python3 -c "
+  printf '%s' "$PIO_CONFIG_JSON" | python3 -c "
 import sys, json, re
 data = json.load(sys.stdin)
 for section, options in data:
@@ -151,7 +151,7 @@ build_firmware() {
       # compiled version shown on the About screen (mc line); keep the hash suffix
       FIRMWARE_VERSION_STRING="${MC_VER}-${COMMIT_HASH}"
 
-      # e.g: WioTrackerL1_companion_radio_ble_mishmesh_mm-v1.0.0_mc-v1.16.0-SHA
+      # e.g: WioTrackerL1_companion_radio_ble_mishmesh_mm-v1.0.0_mc-v1.17.0-SHA
       FIRMWARE_FILENAME="$1_mm-${MM_VER}_mc-${MC_VER}-${COMMIT_HASH}"
 
       export PLATFORMIO_BUILD_FLAGS="${PLATFORMIO_BUILD_FLAGS} -DFIRMWARE_BUILD_DATE='\"${FIRMWARE_BUILD_DATE}\"' -DFIRMWARE_VERSION='\"${FIRMWARE_VERSION_STRING}\"' -DMISHMESH_VERSION='\"${MM_VER}\"'"
